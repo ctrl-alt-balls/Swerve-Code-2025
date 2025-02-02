@@ -7,6 +7,8 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -16,7 +18,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.funny.Music;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -35,11 +39,34 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
+    public final ArmSubsystem arm = new ArmSubsystem();
+
+    public final Music music = new Music(
+        new TalonFX(34),
+        new TalonFX(30),
+        new CANcoder(26),
+        new TalonFX(33),
+        new TalonFX(29),
+        new CANcoder(25),
+        new TalonFX(32),
+        new TalonFX(28),
+        new CANcoder(24),
+        new TalonFX(31),
+        new TalonFX(27),
+        new CANcoder(23)
+    );
+
     public RobotContainer() {
         configureBindings();
     }
 
     private void configureBindings() {
+
+        joystick.start().onTrue(music.PlayMusic("output.chrp"));
+
+        arm.initDefaultCommand();
+        joystick.x().whileTrue(arm.MoveMotor(0.5));
+        joystick.y().whileTrue(arm.MoveMotor(-0.5));
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
