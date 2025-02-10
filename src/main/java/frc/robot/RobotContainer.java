@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.Networking.UDPServer;
 import frc.robot.funny.Music;
 
 public class RobotContainer {
@@ -40,6 +41,8 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     public final ArmSubsystem arm = new ArmSubsystem();
+
+    public final UDPServer questServer = new UDPServer(5805);
 
     public final Music music = new Music(
         new TalonFX(34),
@@ -92,6 +95,8 @@ public class RobotContainer {
 
         // reset the field-centric heading on left bumper press
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+        joystick.povDown().onTrue(questServer.ErmWhatTheSigma());
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
