@@ -41,7 +41,9 @@ public class UDPServer extends SubsystemBase{
     public UDPServer(int port){
         try{
             socket = new DatagramSocket(port);
-            System.out.println("fanum tax started server on port " + socket.getLocalPort());
+            System.out.println("Started UDP server on port " + socket.getLocalPort());
+
+            // New thread for UDP communication so it can run at maximum speed and not interrupt critical robot functions in case of a malfunction
             Thread t1 = new Thread(new Runnable() {
                 public void run()
                 {
@@ -58,27 +60,46 @@ public class UDPServer extends SubsystemBase{
     }
 
     public void RecieveData(){
+        // This is the array that holds all of the bytes from the transmission. 
+        // It is set to 632 because that is the maximum amount of bytes that the Quest can transmit
+        // I do not believe there will ever be a situation in which all 632 bytes will be used, since that requires the Quest to be seeing 22 AprilTags at the same time
         byte[] buffer = new byte[632];
+
+        // This is the thing that recieves the transmission and puts it into the buffer
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         
+        // Recieving the transmission is a blocking function. No code in this thread will run until the transmission is finished
         try {
             socket.receive(packet);
         } catch (IOException e) {
             System.out.println("sry no data uwu");
         }
         
+        // commented out code; pay no attention
         //recievedFloat = ByteBuffer.wrap(packet.getData()).asFloatBuffer().array();
         //System.out.println("uhhh data:"+Arrays.toString(recievedFloat));
         //System.out.println("fanumtaxohio");
 
+        // penisBuffer is the intermediary between the transmission data as a byte array and as other datatypes, such as floats or ints
         ByteBuffer penisBuffer = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
+
+        // The first 12 bytes of the transmission are 3 floats. These floats are what the Quest thinks its position is
+        // The format is quite similar to a Pose2D, but in floating point form instead of double precision.
+        // The first float is the x-position, the second is the z-position, and the third is the y-rotation (euler angles)
         for(int i = 0; i<3;i++){
             recievedFloat[i]=penisBuffer.getFloat();
         }
+
+        // After the Quest pose, there is an int that says how many tags were detected.
+        // It is stored in tagNum for future use
         tagNum = penisBuffer.getInt();
+
+        // commented out code; pay no attention
         //id1 = penisBuffer.getInt();
         //tagTransforms = new AprilTagTransform[tagNum];
         //tagNum = 22;
+
+        // Each of these arrays are set to a new array the size of tagNum, since tagNum is the number of tags seen
         id = new int[tagNum];
         posX = new float[tagNum];
         posY = new float[tagNum];
@@ -95,8 +116,13 @@ public class UDPServer extends SubsystemBase{
             rotY[i] = penisBuffer.getFloat();
             rotZ[i] = penisBuffer.getFloat();
         }
+
+        //TODO: Get the AprilTagTransform class working instead of just individual arrays. 
+        //It will be much easier to program with the values if they are neat and organized
     }
 
+
+    // Call this to print out the data recieved from the quest. Purely for debugging purposes
     public Command ErmWhatTheSigma(){
         return runOnce(
             ()->{

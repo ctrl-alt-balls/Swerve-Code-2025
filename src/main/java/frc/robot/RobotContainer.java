@@ -42,6 +42,7 @@ public class RobotContainer {
 
     public final ArmSubsystem arm = new ArmSubsystem();
 
+    // Port 5805 is the port I chose to communicate with the Quest over. Please do not change this, since it is hardcoded into the Quest app to communicate over this port
     public final UDPServer questServer = new UDPServer(5805);
 
     public final Music music = new Music(
@@ -65,6 +66,7 @@ public class RobotContainer {
 
     private void configureBindings() {
 
+        // Not necessary at all, I still need to test this though. It will play a MIDI of the among us drip music
         joystick.start().onTrue(music.PlayMusic("output.chrp"));
 
         arm.initDefaultCommand();
@@ -96,6 +98,7 @@ public class RobotContainer {
         // reset the field-centric heading on left bumper press
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
+        // Press this to print out data recieved from the Quest
         joystick.povDown().onTrue(questServer.ErmWhatTheSigma());
 
         drivetrain.registerTelemetry(logger::telemeterize);
