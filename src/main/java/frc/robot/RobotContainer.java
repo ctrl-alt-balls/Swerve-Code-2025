@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.Networking.UDPServer;
 import frc.robot.funny.Music;
 
@@ -44,6 +45,8 @@ public class RobotContainer {
 
     // Port 5805 is the port I chose to communicate with the Quest over. Please do not change this, since it is hardcoded into the Quest app to communicate over this port
     public final UDPServer questServer = new UDPServer(5805);
+    
+    ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
 
     public final Music music = new Music(
         new TalonFX(34),
@@ -66,6 +69,10 @@ public class RobotContainer {
 
     private void configureBindings() {
 
+        joystick.a().onTrue(elevatorSubsystem.SetPositionCommand(50));
+        joystick.b().onTrue(elevatorSubsystem.SetPositionCommand(10));
+        joystick.povLeft().onTrue(elevatorSubsystem.Zero(-0.5, 0.05));
+
         // Not necessary at all, I still need to test this though. It will play a MIDI of the among us drip music
         joystick.start().onTrue(music.PlayMusic("output.chrp"));
 
@@ -83,10 +90,13 @@ public class RobotContainer {
             )
         );
 
+        /*
+        // disabled just for testing
         joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         joystick.b().whileTrue(drivetrain.applyRequest(() ->
             point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
         ));
+        */
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
