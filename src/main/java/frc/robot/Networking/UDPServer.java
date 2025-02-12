@@ -9,10 +9,12 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.AprilTagConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 
 public class UDPServer extends SubsystemBase{
 
+    /*
     public class AprilTagTransform{
         int id = 0;
         float posX = 0;
@@ -22,11 +24,12 @@ public class UDPServer extends SubsystemBase{
         float rotY = 0;
         float rotZ = 0;
     }
+    */
 
     DatagramSocket socket;
     float[] recievedFloat = new float[3];
     int tagNum = 0;
-    AprilTagTransform[] tagTransforms;
+    //AprilTagTransform[] tagTransforms;
 
     int[] id;
     float[] posX;
@@ -37,6 +40,8 @@ public class UDPServer extends SubsystemBase{
     float[] rotZ;
 
     int id1 = 0;
+
+    int totalCalls = 0;
 
     public UDPServer(int port){
         try{
@@ -116,9 +121,21 @@ public class UDPServer extends SubsystemBase{
             rotY[i] = penisBuffer.getFloat();
             rotZ[i] = penisBuffer.getFloat();
         }
+        
+        totalCalls++;
+    }
 
-        //TODO: Get the AprilTagTransform class working instead of just individual arrays. 
-        //It will be much easier to program with the values if they are neat and organized
+
+    public float[] calculatePosition(){
+        float calculatedX = 0;
+        float calculatedZ = 0;
+        for(int i = 0; i<tagNum; i++){
+            calculatedX += AprilTagConstants.GetTagPosition(id[i])[0]-posX[i];
+            calculatedZ += AprilTagConstants.GetTagPosition(id[i])[1]-posZ[i];
+        }
+        calculatedX/=tagNum;
+        calculatedZ/=tagNum;
+        return(new float[]{calculatedX,calculatedZ});
     }
 
 
@@ -130,6 +147,7 @@ public class UDPServer extends SubsystemBase{
                 //System.out.println(id1);
                 for(int i = 0; i < tagNum; i++){
                     System.out.println("ID = "+id[i]+", position = ("+posX[i]+","+posY[i]+","+posZ[i]+"), rotation = ("+rotX[i]+","+rotY[i]+","+rotZ[i]+")");
+                    System.out.println("Total calls: " + totalCalls);
                 }
             }
         );
