@@ -14,13 +14,11 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 public class ElevatorSubsystem extends SubsystemBase{
     SparkMax elevatorNeoRight = new SparkMax(17, MotorType.kBrushless);
     SparkMax elevatorNeoLeft = new SparkMax(16, MotorType.kBrushless);
-    PIDController pidController = new PIDController(0.1, 0.01, 0.001);
+    PIDController pidController = new PIDController(0.8, 0.0, 0.0);
+
+    PIDController ratePIDController = new PIDController(0.1, 0.0, 0);
 
     double elevatorZero = 0;
-    double l1 = 0;
-    double l2 = 0;
-    double l3 = 0;
-    double l4 = 0;
 
     // using quadrature encoder
     // if lacking in precision, then change EncodingType to k4X
@@ -35,7 +33,11 @@ public class ElevatorSubsystem extends SubsystemBase{
 
     double setpoint;
     double encVal;
+    double encRate;
     double currentPIDVal;
+
+    double topSwitchPIDResponse = -2;
+    double bottomSwitchPIDResponse = 2;
     
     //private final ShuffleboardTab m_tab = Shuffleboard.getTab("Elevator");
 
@@ -59,26 +61,38 @@ public class ElevatorSubsystem extends SubsystemBase{
 
     @Override
 	public void periodic() {
-        encVal = elevEnc.getDistance();
+        encVal = elevEnc.getDistance()/2000;
+        encRate = elevEnc.getRate()/2000;
 
-        if(isZeroing&&!limSwitchBottom.get()&&!isBottomed){
-            currentPIDVal = pidController.calculate(elevEnc.getRate(),zeroInitSpeed);
-        }else if(isZeroing&&limSwitchBottom.get()){
-            currentPIDVal = pidController.calculate(elevEnc.getRate(),zeroExitSpeed);
+        if(isZeroing&&limSwitchBottom.get()&&!isBottomed){
+            currentPIDVal = ratePIDController.calculate(encRate,zeroInitSpeed);
+        }else if(isZeroing&&!limSwitchBottom.get()){
+            currentPIDVal = ratePIDController.calculate(encRate,zeroExitSpeed);
             isBottomed = true;
-        }else if(isZeroing&&!limSwitchBottom.get()&&isBottomed){
+        }else if(isZeroing&&limSwitchBottom.get()&&isBottomed){
             currentPIDVal = 0;
             isBottomed = false;
             isZeroing = false;
             elevatorZero=encVal;
+        }else if(!limSwichTop.get()){
+            currentPIDVal=ratePIDController.calculate(encRate,topSwitchPIDResponse);
+        }else if(!limSwitchBottom.get()){
+            currentPIDVal=ratePIDController.calculate(encRate,bottomSwitchPIDResponse);
         }else{
             currentPIDVal = pidController.calculate(encVal-elevatorZero,setpoint);
         }
 
-        elevatorNeoLeft.set(currentPIDVal);
-        elevatorNeoRight.set(-currentPIDVal);
+        if(currentPIDVal>1){
+            currentPIDVal=1;
+        }else if(currentPIDVal<-1){
+            currentPIDVal=-1;
+        }
 
-		SmartDashboard.putNumber("Encoder", elevEnc.getDistance()-elevatorZero);
+        elevatorNeoLeft.set(-currentPIDVal);
+        elevatorNeoRight.set(currentPIDVal);
+
+		SmartDashboard.putNumber("Encoder", encVal-elevatorZero);
+        SmartDashboard.putNumber("EncoderRate", encRate);
         SmartDashboard.putNumber("PID", currentPIDVal);
 	}
 }

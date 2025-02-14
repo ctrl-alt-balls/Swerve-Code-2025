@@ -21,6 +21,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.SubsystemConstants.ElevatorConstants;
 import frc.robot.Networking.UDPServer;
 import frc.robot.funny.Music;
 
@@ -37,7 +38,8 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandXboxController driverController = new CommandXboxController(0);
+    private final CommandXboxController scorerController = new CommandXboxController(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -69,47 +71,45 @@ public class RobotContainer {
 
     private void configureBindings() {
 
-        joystick.a().onTrue(elevatorSubsystem.SetPositionCommand(50));
-        joystick.b().onTrue(elevatorSubsystem.SetPositionCommand(10));
-        joystick.povLeft().onTrue(elevatorSubsystem.Zero(-0.5, 0.05));
+        scorerController.a().onTrue(elevatorSubsystem.SetPositionCommand(ElevatorConstants.L1));
+        scorerController.b().onTrue(elevatorSubsystem.SetPositionCommand(ElevatorConstants.L2));
+        scorerController.povLeft().onTrue(elevatorSubsystem.Zero(4, -0.5));
 
         // Not necessary at all, I still need to test this though. It will play a MIDI of the among us drip music
-        joystick.start().onTrue(music.PlayMusic("output.chrp"));
+        scorerController.start().onTrue(music.PlayMusic("output.chrp"));
 
         arm.initDefaultCommand();
-        joystick.x().whileTrue(arm.MoveMotor(0.5));
-        joystick.y().whileTrue(arm.MoveMotor(-0.5));
+        driverController.x().whileTrue(arm.MoveMotor(0.5));
+        driverController.y().whileTrue(arm.MoveMotor(-0.5));
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
 
-        /*
-        // disabled just for testing
-        joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        joystick.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
+        
+        driverController.a().whileTrue(drivetrain.applyRequest(() -> brake));
+        driverController.b().whileTrue(drivetrain.applyRequest(() ->
+            point.withModuleDirection(new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))
         ));
-        */
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        driverController.back().and(driverController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        driverController.back().and(driverController.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        driverController.start().and(driverController.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
-        joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         // Press this to print out data recieved from the Quest
-        joystick.povDown().onTrue(questServer.ErmWhatTheSigma());
+        driverController.povDown().onTrue(questServer.ErmWhatTheSigma());
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
