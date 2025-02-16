@@ -1,28 +1,28 @@
 package frc.robot.Constants;
 
 public class AprilTagConstants {
-    public static final float[] tag1Pos = {0,0};
-    public static final float[] tag2Pos = {0,0};
-    public static final float[] tag3Pos = {0,0};
-    public static final float[] tag4Pos = {0,0};
-    public static final float[] tag5Pos = {0,0};
-    public static final float[] tag6Pos = {0,0};
-    public static final float[] tag7Pos = {0,0};
-    public static final float[] tag8Pos = {0,0};
-    public static final float[] tag9Pos = {0,0};
-    public static final float[] tag10Pos = {0,0};
-    public static final float[] tag11Pos = {0,0};
-    public static final float[] tag12Pos = {0,0};
-    public static final float[] tag13Pos = {0,0};
-    public static final float[] tag14Pos = {0,0};
-    public static final float[] tag15Pos = {0,0};
-    public static final float[] tag16Pos = {0,0};
-    public static final float[] tag17Pos = {0,0};
-    public static final float[] tag18Pos = {0,0};
-    public static final float[] tag19Pos = {0,0};
-    public static final float[] tag20Pos = {0,0};
-    public static final float[] tag21Pos = {0,0};
-    public static final float[] tag22Pos = {0,0};
+    public static final float[] tag1Pos = {0,0,0};
+    public static final float[] tag2Pos = {0,0,0};
+    public static final float[] tag3Pos = {0,0,0};
+    public static final float[] tag4Pos = {0,0,0};
+    public static final float[] tag5Pos = {0,0,0};
+    public static final float[] tag6Pos = {0,0,0};
+    public static final float[] tag7Pos = {0,0,0};
+    public static final float[] tag8Pos = {0,0,0};
+    public static final float[] tag9Pos = {0,0,0};
+    public static final float[] tag10Pos = {0,0,0};
+    public static final float[] tag11Pos = {0,0,0};
+    public static final float[] tag12Pos = {0,0,0};
+    public static final float[] tag13Pos = {0,0,0};
+    public static final float[] tag14Pos = {0,0,0};
+    public static final float[] tag15Pos = {0,0,0};
+    public static final float[] tag16Pos = {0,0,0};
+    public static final float[] tag17Pos = {0,0,0};
+    public static final float[] tag18Pos = {0,0,0};
+    public static final float[] tag19Pos = {0,0,0};
+    public static final float[] tag20Pos = {0,0,0};
+    public static final float[] tag21Pos = {0,0,0};
+    public static final float[] tag22Pos = {0,0,0};
     
     public static float[] GetTagPosition(int id){
         switch(id){
@@ -73,7 +73,7 @@ public class AprilTagConstants {
             default:
                 // Error case, this should never happen
                 // I just didn't feel like making an exception
-                return(new float[]{69420,69420});
+                return(new float[]{69420,69420,69420});
         }
     }
 }

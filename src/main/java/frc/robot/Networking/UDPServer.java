@@ -129,13 +129,16 @@ public class UDPServer extends SubsystemBase{
     public float[] calculatePosition(){
         float calculatedX = 0;
         float calculatedZ = 0;
+        float calculatedYRot = 0;
         for(int i = 0; i<tagNum; i++){
             calculatedX += AprilTagConstants.GetTagPosition(id[i])[0]-posX[i];
             calculatedZ += AprilTagConstants.GetTagPosition(id[i])[1]-posZ[i];
+            calculatedYRot += AprilTagConstants.GetTagPosition(id[i])[2]-rotY[i];
         }
         calculatedX/=tagNum;
         calculatedZ/=tagNum;
-        return(new float[]{calculatedX,calculatedZ});
+        calculatedYRot/=tagNum;
+        return(new float[]{calculatedX,calculatedZ,calculatedYRot});
     }
 
 

@@ -67,20 +67,27 @@ public class RobotContainer {
 
     public RobotContainer() {
         configureBindings();
+        music.PlayMusic("caveStory.chrp");
     }
 
     private void configureBindings() {
 
-        scorerController.a().onTrue(elevatorSubsystem.SetPositionCommand(ElevatorConstants.L1));
-        scorerController.b().onTrue(elevatorSubsystem.SetPositionCommand(ElevatorConstants.L2));
-        scorerController.povLeft().onTrue(elevatorSubsystem.Zero(4, -0.5));
+        scorerController.a().onTrue(elevatorSubsystem.SetPositionCommand(2));
+        scorerController.b().onTrue(elevatorSubsystem.SetPositionCommand(5));
+
+        // Some testing stuff for elevator
+        scorerController.x().onTrue(elevatorSubsystem.SetPositionCommand(1000));
+        scorerController.y().onTrue(elevatorSubsystem.SetPositionCommand(-1000));
+
+
+        scorerController.povLeft().onTrue(elevatorSubsystem.Zero(-4, 0.5));
 
         // Not necessary at all, I still need to test this though. It will play a MIDI of the among us drip music
-        scorerController.start().onTrue(music.PlayMusic("output.chrp"));
+        scorerController.start().onTrue(music.PlayMusic("caveStory.chrp"));
 
         arm.initDefaultCommand();
-        driverController.x().whileTrue(arm.MoveMotor(0.5));
-        driverController.y().whileTrue(arm.MoveMotor(-0.5));
+        //scorerController.x().whileTrue(arm.RunClimber(0.6));
+        //scorerController.y().whileTrue(arm.RunClimber(-0.6));
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(

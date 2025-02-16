@@ -59,10 +59,18 @@ public class ElevatorSubsystem extends SubsystemBase{
         );
     }
 
+    public Command ManualRun(double speed){
+        return run(
+        () -> {
+            elevatorNeoLeft.set(currentPIDVal);
+            elevatorNeoRight.set(-currentPIDVal);
+        });
+    }
+
     @Override
 	public void periodic() {
-        encVal = elevEnc.getDistance()/2000;
-        encRate = elevEnc.getRate()/2000;
+        encVal = -elevEnc.getDistance()/2000;
+        encRate = -elevEnc.getRate()/2000;
 
         if(isZeroing&&limSwitchBottom.get()&&!isBottomed){
             currentPIDVal = ratePIDController.calculate(encRate,zeroInitSpeed);
@@ -82,17 +90,20 @@ public class ElevatorSubsystem extends SubsystemBase{
             currentPIDVal = pidController.calculate(encVal-elevatorZero,setpoint);
         }
 
-        if(currentPIDVal>1){
-            currentPIDVal=1;
-        }else if(currentPIDVal<-1){
-            currentPIDVal=-1;
+        if(currentPIDVal>0.75){
+            currentPIDVal=0.75;
+        }else if(currentPIDVal<-0.75){
+            currentPIDVal=-0.75;
         }
 
-        elevatorNeoLeft.set(-currentPIDVal);
-        elevatorNeoRight.set(currentPIDVal);
+        elevatorNeoLeft.set(currentPIDVal);
+        elevatorNeoRight.set(-currentPIDVal);
 
 		SmartDashboard.putNumber("Encoder", encVal-elevatorZero);
         SmartDashboard.putNumber("EncoderRate", encRate);
         SmartDashboard.putNumber("PID", currentPIDVal);
+        SmartDashboard.putNumber("setpoint", setpoint);
+        SmartDashboard.putBoolean("topSwitch", limSwichTop.get());
+        SmartDashboard.putBoolean("bottomSwitch", limSwitchBottom.get());
 	}
 }
