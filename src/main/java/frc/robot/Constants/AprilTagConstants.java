@@ -1,28 +1,29 @@
 package frc.robot.Constants;
 
 public class AprilTagConstants {
-    public static final float[] tag1Pos = {0,0,0};
-    public static final float[] tag2Pos = {0,0,0};
-    public static final float[] tag3Pos = {0,0,0};
-    public static final float[] tag4Pos = {0,0,0};
-    public static final float[] tag5Pos = {0,0,0};
-    public static final float[] tag6Pos = {0,0,0};
-    public static final float[] tag7Pos = {0,0,0};
-    public static final float[] tag8Pos = {0,0,0};
-    public static final float[] tag9Pos = {0,0,0};
-    public static final float[] tag10Pos = {0,0,0};
-    public static final float[] tag11Pos = {0,0,0};
-    public static final float[] tag12Pos = {0,0,0};
-    public static final float[] tag13Pos = {0,0,0};
-    public static final float[] tag14Pos = {0,0,0};
-    public static final float[] tag15Pos = {0,0,0};
-    public static final float[] tag16Pos = {0,0,0};
-    public static final float[] tag17Pos = {0,0,0};
-    public static final float[] tag18Pos = {0,0,0};
-    public static final float[] tag19Pos = {0,0,0};
-    public static final float[] tag20Pos = {0,0,0};
-    public static final float[] tag21Pos = {0,0,0};
-    public static final float[] tag22Pos = {0,0,0};
+    //X (in metres) , Z (in metres) , YRot (in degrees)
+    public static final float[] tag1Pos = {16.697198f,0.65532f,126};
+    public static final float[] tag2Pos = {16.697198f,7.39648f,234};
+    public static final float[] tag3Pos = {11.56081f,8.05561f,270};
+    public static final float[] tag4Pos = {9.27608f,6.137656f,0};
+    public static final float[] tag5Pos = {9.27608f,1.914906f,0};
+    public static final float[] tag6Pos = {13.474446f,3.306318f,300};
+    public static final float[] tag7Pos = {13.890498f,4.0259f,0};
+    public static final float[] tag8Pos = {13.474446f,186.83f,60};
+    public static final float[] tag9Pos = {12.643358f,186.83f,120};
+    public static final float[] tag10Pos = {12.227306f,158.50f,180};
+    public static final float[] tag11Pos = {12.643358f,3.306318f,240};
+    public static final float[] tag12Pos = {0.851154f,0.65532f,54};
+    public static final float[] tag13Pos = {0.851154f,7.39648f,306};
+    public static final float[] tag14Pos = {8.272272f,6.137656f,180};
+    public static final float[] tag15Pos = {8.272272f,1.914906f,180};
+    public static final float[] tag16Pos = {5.987542f,-0.00381f,90};
+    public static final float[] tag17Pos = {4.073906f,3.306318f,240};
+    public static final float[] tag18Pos = {3.6576f,4.0259f,180};
+    public static final float[] tag19Pos = {4.073906f,4.745482f,120};
+    public static final float[] tag20Pos = {4.90474f,4.745482f,60};
+    public static final float[] tag21Pos = {5.321046f,4.0259f,0};
+    public static final float[] tag22Pos = {4.90474f,3.306318f,300};
     
     public static float[] GetTagPosition(int id){
         switch(id){
