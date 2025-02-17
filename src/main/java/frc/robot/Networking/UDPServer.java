@@ -30,6 +30,8 @@ public class UDPServer extends SubsystemBase{
     float[] recievedFloat = new float[3];
     int tagNum = 0;
     //AprilTagTransform[] tagTransforms;
+    float[] poseFromTag = new float[3];
+    float[] poseOffset = new float[3];
 
     int[] id;
     float[] posX;
@@ -42,6 +44,9 @@ public class UDPServer extends SubsystemBase{
     int id1 = 0;
 
     int totalCalls = 0;
+
+    // for turning on the april tag position calibration (do not modify)
+    boolean tagPoseCal = false;
 
     public UDPServer(int port){
         try{
@@ -122,10 +127,17 @@ public class UDPServer extends SubsystemBase{
             rotZ[i] = penisBuffer.getFloat();
         }
         
+        setPoseOffset();
         totalCalls++;
+
+        if(tagPoseCal){
+            tagPoseCal = false;
+            
+        }
     }
 
 
+    /*
     public float[] calculatePosition(){
         float calculatedX = 0;
         float calculatedZ = 0;
@@ -139,6 +151,23 @@ public class UDPServer extends SubsystemBase{
         calculatedZ/=tagNum;
         calculatedYRot/=tagNum;
         return(new float[]{calculatedX,calculatedZ,calculatedYRot});
+    }
+    */
+
+    void setPoseOffset(){
+        for(int i = 0; i<tagNum; i++){
+            poseFromTag[0] += AprilTagConstants.GetTagPosition(id[i])[0]-posX[i];
+            poseFromTag[1] += AprilTagConstants.GetTagPosition(id[i])[1]-posZ[i];
+            poseFromTag[2] += AprilTagConstants.GetTagPosition(id[i])[2]-rotY[i];
+        }
+        poseFromTag[0]/=tagNum;
+        poseFromTag[1]/=tagNum;
+        poseFromTag[2]/=tagNum;
+    }
+
+
+    public void calculateRobotPoseFromTag(){
+        tagPoseCal = true;
     }
 
 
