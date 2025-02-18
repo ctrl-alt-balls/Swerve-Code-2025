@@ -50,6 +50,7 @@ public class RobotContainer {
     
     ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
 
+    /*
     public final Music music = new Music(
         new TalonFX(34),
         new TalonFX(30),
@@ -64,10 +65,11 @@ public class RobotContainer {
         new TalonFX(27),
         new CANcoder(23)
     );
+    */
 
     public RobotContainer() {
         configureBindings();
-        music.PlayMusic("caveStory.chrp");
+        //music.PlayMusic("caveStory.chrp");
     }
 
     private void configureBindings() {
@@ -76,15 +78,14 @@ public class RobotContainer {
         scorerController.b().onTrue(elevatorSubsystem.SetPositionCommand(5));
 
         // Some testing stuff for elevator
-        scorerController.x().onTrue(elevatorSubsystem.SetPositionCommand(1000));
-        scorerController.y().onTrue(elevatorSubsystem.SetPositionCommand(-1000));
+        scorerController.x().onTrue(elevatorSubsystem.ManualRun(0.5));
+        scorerController.y().onTrue(elevatorSubsystem.ManualRun(-0.5));
+        scorerController.x().and(scorerController.y()).whileFalse(elevatorSubsystem.DisableManualRun());
 
 
         scorerController.povLeft().onTrue(elevatorSubsystem.Zero(-4, 0.5));
 
         // Not necessary at all, I still need to test this though. It will play a MIDI of the among us drip music
-        scorerController.start().onTrue(music.PlayMusic("caveStory.chrp"));
-
         arm.initDefaultCommand();
         //scorerController.x().whileTrue(arm.RunClimber(0.6));
         //scorerController.y().whileTrue(arm.RunClimber(-0.6));

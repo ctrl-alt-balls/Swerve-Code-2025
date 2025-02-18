@@ -1,6 +1,11 @@
 package frc.robot.Constants;
 
 public class AprilTagConstants {
+
+    // Positions of the quest and camera
+    public static final float[] questPositionFromRobotCenter = {0.0f,0.0f};
+    public static final float[] cameraPositionFromRobotCenter = {0.0f,0.0f};
+
     //X (in metres) , Z (in metres) , YRot (in degrees)
     public static final float[] tag1Pos = {16.697198f,0.65532f,126};
     public static final float[] tag2Pos = {16.697198f,7.39648f,234};

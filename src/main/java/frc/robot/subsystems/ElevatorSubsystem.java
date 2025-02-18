@@ -38,6 +38,8 @@ public class ElevatorSubsystem extends SubsystemBase{
 
     double topSwitchPIDResponse = -2;
     double bottomSwitchPIDResponse = 2;
+
+    boolean isManualRun = false;
     
     //private final ShuffleboardTab m_tab = Shuffleboard.getTab("Elevator");
 
@@ -62,9 +64,18 @@ public class ElevatorSubsystem extends SubsystemBase{
     public Command ManualRun(double speed){
         return run(
         () -> {
+            isManualRun = true;
             elevatorNeoLeft.set(currentPIDVal);
             elevatorNeoRight.set(-currentPIDVal);
         });
+    }
+
+    public Command DisableManualRun(){
+        return run(
+            ()->{
+                isManualRun=false;
+            }
+        );
     }
 
     @Override
@@ -72,32 +83,38 @@ public class ElevatorSubsystem extends SubsystemBase{
         encVal = -elevEnc.getDistance()/2000;
         encRate = -elevEnc.getRate()/2000;
 
-        if(isZeroing&&limSwitchBottom.get()&&!isBottomed){
+        if(isZeroing&&!limSwitchBottom.get()&&!isBottomed){
             currentPIDVal = ratePIDController.calculate(encRate,zeroInitSpeed);
-        }else if(isZeroing&&!limSwitchBottom.get()){
+        }else if(isZeroing&&limSwitchBottom.get()){
             currentPIDVal = ratePIDController.calculate(encRate,zeroExitSpeed);
             isBottomed = true;
-        }else if(isZeroing&&limSwitchBottom.get()&&isBottomed){
+        }else if(isZeroing&&!limSwitchBottom.get()&&isBottomed){
             currentPIDVal = 0;
             isBottomed = false;
             isZeroing = false;
             elevatorZero=encVal;
-        }else if(!limSwichTop.get()){
+        }else if(limSwichTop.get()){
             currentPIDVal=ratePIDController.calculate(encRate,topSwitchPIDResponse);
-        }else if(!limSwitchBottom.get()){
+            isManualRun = false;
+        }else if(limSwitchBottom.get()){
             currentPIDVal=ratePIDController.calculate(encRate,bottomSwitchPIDResponse);
+            isManualRun = false;
         }else{
             currentPIDVal = pidController.calculate(encVal-elevatorZero,setpoint);
         }
 
-        if(currentPIDVal>0.75){
-            currentPIDVal=0.75;
-        }else if(currentPIDVal<-0.75){
-            currentPIDVal=-0.75;
+        if(currentPIDVal>1){
+            currentPIDVal=1;
+        }else if(currentPIDVal<-1){
+            currentPIDVal=-1;
         }
 
-        elevatorNeoLeft.set(currentPIDVal);
-        elevatorNeoRight.set(-currentPIDVal);
+        if(!isManualRun){
+            elevatorNeoLeft.set(currentPIDVal);
+            elevatorNeoRight.set(-currentPIDVal);
+        }
+
+        //isManualRun = false;
 
 		SmartDashboard.putNumber("Encoder", encVal-elevatorZero);
         SmartDashboard.putNumber("EncoderRate", encRate);

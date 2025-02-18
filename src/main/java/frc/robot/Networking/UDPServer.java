@@ -9,7 +9,9 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.mathstuff.PoopyMath;
 import frc.robot.Constants.AprilTagConstants;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 
 public class UDPServer extends SubsystemBase{
@@ -45,8 +47,7 @@ public class UDPServer extends SubsystemBase{
 
     int totalCalls = 0;
 
-    // for turning on the april tag position calibration (do not modify)
-    boolean tagPoseCal = false;
+    float[] calibratedPose = new float[3];
 
     public UDPServer(int port){
         try{
@@ -100,6 +101,9 @@ public class UDPServer extends SubsystemBase{
             recievedFloat[i]=penisBuffer.getFloat();
         }
 
+        recievedFloat[0]-=AprilTagConstants.questPositionFromRobotCenter[0];
+        recievedFloat[1]-=AprilTagConstants.questPositionFromRobotCenter[0];
+
         // After the Quest pose, there is an int that says how many tags were detected.
         // It is stored in tagNum for future use
         tagNum = penisBuffer.getInt();
@@ -126,14 +130,18 @@ public class UDPServer extends SubsystemBase{
             rotY[i] = penisBuffer.getFloat();
             rotZ[i] = penisBuffer.getFloat();
         }
-        
-        setPoseOffset();
         totalCalls++;
 
-        if(tagPoseCal){
-            tagPoseCal = false;
-            
+        if(tagNum>0){
+            setPoseFromTag();
+            poseOffset[0] = recievedFloat[0];
+            poseOffset[1] = recievedFloat[1];
+            poseOffset[2] = recievedFloat[2];
         }
+
+        calibratedPose[0] = recievedFloat[0]-poseOffset[0]+poseFromTag[0];
+        calibratedPose[1] = recievedFloat[1]-poseOffset[1]+poseFromTag[1];
+        calibratedPose[2] = recievedFloat[2]-poseOffset[2]+poseFromTag[2];
     }
 
 
@@ -154,20 +162,19 @@ public class UDPServer extends SubsystemBase{
     }
     */
 
-    void setPoseOffset(){
+    void setPoseFromTag(){
+        poseFromTag[0]=0;
+        poseFromTag[1]=0;
+        poseFromTag[2]=0;
         for(int i = 0; i<tagNum; i++){
-            poseFromTag[0] += AprilTagConstants.GetTagPosition(id[i])[0]-posX[i];
-            poseFromTag[1] += AprilTagConstants.GetTagPosition(id[i])[1]-posZ[i];
-            poseFromTag[2] += AprilTagConstants.GetTagPosition(id[i])[2]-rotY[i];
+            double[] rotatedPose = PoopyMath.rotateVector2(posX[i],posZ[i],rotY[i]);
+            poseFromTag[0] += AprilTagConstants.GetTagPosition(id[i])[0]-rotatedPose[0]-AprilTagConstants.cameraPositionFromRobotCenter[0];
+            poseFromTag[1] += AprilTagConstants.GetTagPosition(id[i])[1]-rotatedPose[1]-AprilTagConstants.cameraPositionFromRobotCenter[1];
+            poseFromTag[2] += AprilTagConstants.GetTagPosition(id[i])[2]-rotatedPose[2];
         }
         poseFromTag[0]/=tagNum;
         poseFromTag[1]/=tagNum;
         poseFromTag[2]/=tagNum;
-    }
-
-
-    public void calculateRobotPoseFromTag(){
-        tagPoseCal = true;
     }
 
 
@@ -183,5 +190,13 @@ public class UDPServer extends SubsystemBase{
                 }
             }
         );
+    }
+
+    @Override
+    public void periodic(){
+        SmartDashboard.putString("Quest Pose", Arrays.toString(poseOffset));
+        SmartDashboard.putString("Calibrated Pose",Arrays.toString(calibratedPose));
+        SmartDashboard.putNumber("executions", totalCalls);
+        SmartDashboard.putNumber("tagnum", tagNum);
     }
 }
