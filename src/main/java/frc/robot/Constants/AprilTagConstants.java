@@ -14,9 +14,9 @@ public class AprilTagConstants {
     public static final float[] tag5Pos = {9.27608f,1.914906f,0};
     public static final float[] tag6Pos = {13.474446f,3.306318f,300};
     public static final float[] tag7Pos = {13.890498f,4.0259f,0};
-    public static final float[] tag8Pos = {13.474446f,186.83f,60};
-    public static final float[] tag9Pos = {12.643358f,186.83f,120};
-    public static final float[] tag10Pos = {12.227306f,158.50f,180};
+    public static final float[] tag8Pos = {13.474446f,4.745482f,60};
+    public static final float[] tag9Pos = {12.643358f,4.745482f,120};
+    public static final float[] tag10Pos = {12.227306f,4.0259f,180};
     public static final float[] tag11Pos = {12.643358f,3.306318f,240};
     public static final float[] tag12Pos = {0.851154f,0.65532f,54};
     public static final float[] tag13Pos = {0.851154f,7.39648f,306};
