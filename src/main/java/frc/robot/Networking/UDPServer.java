@@ -142,6 +142,10 @@ public class UDPServer extends SubsystemBase{
         calibratedPose[0] = recievedFloat[0]-poseOffset[0]+poseFromTag[0];
         calibratedPose[1] = recievedFloat[1]-poseOffset[1]+poseFromTag[1];
         calibratedPose[2] = recievedFloat[2]-poseOffset[2]+poseFromTag[2];
+        calibratedPose[2] %= 360;
+        if(calibratedPose[2]<0){
+            calibratedPose[2]+=360;
+        }
     }
 
 
@@ -167,14 +171,19 @@ public class UDPServer extends SubsystemBase{
         poseFromTag[1]=0;
         poseFromTag[2]=0;
         for(int i = 0; i<tagNum; i++){
-            double[] rotatedPose = PoopyMath.rotateVector2(posX[i],posZ[i],rotY[i]);
+            double[] rotatedPose = PoopyMath.rotateVector2(posX[i],posZ[i],AprilTagConstants.GetTagPosition(id[i])[2]);
             poseFromTag[0] += AprilTagConstants.GetTagPosition(id[i])[0]-rotatedPose[0]-AprilTagConstants.cameraPositionFromRobotCenter[0];
             poseFromTag[1] += AprilTagConstants.GetTagPosition(id[i])[1]-rotatedPose[1]-AprilTagConstants.cameraPositionFromRobotCenter[1];
-            poseFromTag[2] += AprilTagConstants.GetTagPosition(id[i])[2]-rotatedPose[2];
+            poseFromTag[2] += AprilTagConstants.GetTagPosition(id[i])[2]-rotY[i];
         }
         poseFromTag[0]/=tagNum;
         poseFromTag[1]/=tagNum;
         poseFromTag[2]/=tagNum;
+
+        poseFromTag[2] %= 360;
+        if(poseFromTag[2]<0){
+            poseFromTag[2]+=360;
+        }
     }
 
 
