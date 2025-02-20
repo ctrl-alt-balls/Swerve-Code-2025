@@ -14,7 +14,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 public class ElevatorSubsystem extends SubsystemBase{
     SparkMax elevatorNeoRight = new SparkMax(17, MotorType.kBrushless);
     SparkMax elevatorNeoLeft = new SparkMax(16, MotorType.kBrushless);
-    PIDController pidController = new PIDController(0.8, 0.0, 0.0);
+    PIDController pidController = new PIDController(1, 0.0, 0.0);
 
     PIDController ratePIDController = new PIDController(0.1, 0.0, 0);
 
@@ -55,8 +55,8 @@ public class ElevatorSubsystem extends SubsystemBase{
         return runOnce(
             ()->{
                 isZeroing=true;
-                zeroInitSpeed = initSpeed;
                 zeroExitSpeed = exitSpeed;
+                zeroInitSpeed = initSpeed;
             }
         );
     }
@@ -64,9 +64,11 @@ public class ElevatorSubsystem extends SubsystemBase{
     public Command ManualRun(double speed){
         return run(
         () -> {
-            isManualRun = true;
-            elevatorNeoLeft.set(currentPIDVal);
-            elevatorNeoRight.set(-currentPIDVal);
+            if(!limSwichTop.get()&&!limSwitchBottom.get()){
+                isManualRun = true;
+                elevatorNeoLeft.set(speed);
+                elevatorNeoRight.set(-speed);
+            }
         });
     }
 
@@ -74,6 +76,9 @@ public class ElevatorSubsystem extends SubsystemBase{
         return run(
             ()->{
                 isManualRun=false;
+                elevatorNeoLeft.set(0);
+                elevatorNeoRight.set(0);
+                //System.out.println("amogusFortnitepenisballs");
             }
         );
     }
@@ -122,5 +127,6 @@ public class ElevatorSubsystem extends SubsystemBase{
         SmartDashboard.putNumber("setpoint", setpoint);
         SmartDashboard.putBoolean("topSwitch", limSwichTop.get());
         SmartDashboard.putBoolean("bottomSwitch", limSwitchBottom.get());
+        SmartDashboard.putBoolean("manualRun", isManualRun);
 	}
 }

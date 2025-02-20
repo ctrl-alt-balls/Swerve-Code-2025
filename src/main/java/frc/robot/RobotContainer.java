@@ -80,7 +80,8 @@ public class RobotContainer {
         // Some testing stuff for elevator
         scorerController.x().onTrue(elevatorSubsystem.ManualRun(0.5));
         scorerController.y().onTrue(elevatorSubsystem.ManualRun(-0.5));
-        scorerController.x().and(scorerController.y()).whileFalse(elevatorSubsystem.DisableManualRun());
+        scorerController.x().whileFalse(elevatorSubsystem.DisableManualRun());
+        scorerController.y().whileFalse(elevatorSubsystem.DisableManualRun());
 
 
         scorerController.povLeft().onTrue(elevatorSubsystem.Zero(-4, 0.5));

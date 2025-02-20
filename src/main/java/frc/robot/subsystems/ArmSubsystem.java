@@ -19,6 +19,13 @@ public class ArmSubsystem extends SubsystemBase {
     PIDController pidController = new PIDController(0.1, 0, 0);
     double rotSetpoint = 0;
     double armEncVal;
+    double currentPIDVal = 0;
+
+    double pidMargin = 0.05;
+    boolean ejectCoral = false;
+    boolean intakeCoral = false;
+    double ejectSpeed = 0.5;
+    double intakeSpeed = 0.2;
 
 
     public Command SetArmRotationCommand(double setpointInput){
@@ -45,6 +52,27 @@ public class ArmSubsystem extends SubsystemBase {
     @Override
     public void periodic(){
         armEncVal = armEnc.get();
+        
+        currentPIDVal = pidController.calculate(armEncVal, rotSetpoint);
+
+        if(currentPIDVal>1){
+            currentPIDVal=1;
+        }else if(currentPIDVal<-1){
+            currentPIDVal=-1;
+        }
+
+        armRotNeo.set(currentPIDVal);
+
+        if(currentPIDVal<=pidMargin&&currentPIDVal>=-pidMargin){
+            if(ejectCoral){
+                m_grippinator500.set(ejectSpeed);
+            }else if(intakeCoral){
+                m_grippinator500.set(intakeSpeed);
+            }
+        }else{
+            m_grippinator500.set(0);
+        }
+
         SmartDashboard.putNumber("DutyCycleEncoder", armEncVal);
     }
 
