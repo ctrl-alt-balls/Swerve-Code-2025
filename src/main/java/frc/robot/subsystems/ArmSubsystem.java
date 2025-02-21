@@ -5,6 +5,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -15,6 +16,8 @@ public class ArmSubsystem extends SubsystemBase {
     SparkMax armRotNeo = new SparkMax(18, MotorType.kBrushless);
     DutyCycleEncoder armEnc = new DutyCycleEncoder(4);
     SparkMax climberMotor = new SparkMax(20, MotorType.kBrushed);
+
+    DigitalInput coralSensor = new DigitalInput(4);
 
     PIDController pidController = new PIDController(0.1, 0, 0);
     double rotSetpoint = 0;
