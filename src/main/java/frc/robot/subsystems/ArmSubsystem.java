@@ -69,8 +69,10 @@ public class ArmSubsystem extends SubsystemBase {
         if(currentPIDVal<=pidMargin&&currentPIDVal>=-pidMargin){
             if(ejectCoral){
                 m_grippinator500.set(ejectSpeed);
-            }else if(intakeCoral){
+            }else if(intakeCoral&&!coralSensor.get()){
                 m_grippinator500.set(intakeSpeed);
+            }else{
+                m_grippinator500.set(0);
             }
         }else{
             m_grippinator500.set(0);

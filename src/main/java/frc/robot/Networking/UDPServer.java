@@ -57,7 +57,7 @@ public class UDPServer extends SubsystemBase{
     boolean motionlessCalib = false;
     int calibSamples = 5;
     int calibSampleIndex = 0;
-    boolean calibFinished = false;
+    public boolean calibFinished = false;
 
 
     // Do not touch, internal use ONLY
@@ -192,6 +192,19 @@ public class UDPServer extends SubsystemBase{
 
     public Pose2d getCalibratedPoseAsPose2d(){
         return new Pose2d(calibratedPose[0],calibratedPose[1],new Rotation2d(Math.toRadians(calibratedPose[2])));
+    }
+
+    public float[] getMotionlessCalibPose(){
+        return extraAccuracyPoseHoldValue;
+    }
+
+    public void enableMotionlessCalib(int sampleAmount){
+        calibSamples=sampleAmount;
+        motionlessCalib=true;
+    }
+    
+    public void disableMotionlessCalib(){
+        motionlessCalib=false;
     }
 
 
