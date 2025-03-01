@@ -86,7 +86,8 @@ public class RobotContainer {
 
         scorerController.povLeft().onTrue(elevatorSubsystem.Zero(-4, 0.5));
 
-        // Not necessary at all, I still need to test this though. It will play a MIDI of the among us drip music
+        scorerController.rightBumper().whileTrue(arm.SetArmRotationCommand(scorerController.getLeftY()));
+
         arm.initDefaultCommand();
         //scorerController.x().whileTrue(arm.RunClimber(0.6));
         //scorerController.y().whileTrue(arm.RunClimber(-0.6));

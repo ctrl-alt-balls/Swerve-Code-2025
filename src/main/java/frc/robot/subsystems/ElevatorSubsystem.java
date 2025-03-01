@@ -121,12 +121,12 @@ public class ElevatorSubsystem extends SubsystemBase{
 
         //isManualRun = false;
 
-		SmartDashboard.putNumber("Encoder", encVal-elevatorZero);
-        SmartDashboard.putNumber("EncoderRate", encRate);
-        SmartDashboard.putNumber("PID", currentPIDVal);
-        SmartDashboard.putNumber("setpoint", setpoint);
-        SmartDashboard.putBoolean("topSwitch", limSwichTop.get());
-        SmartDashboard.putBoolean("bottomSwitch", limSwitchBottom.get());
-        SmartDashboard.putBoolean("manualRun", isManualRun);
+		//SmartDashboard.putNumber("Encoder", encVal-elevatorZero);
+        //SmartDashboard.putNumber("EncoderRate", encRate);
+        //SmartDashboard.putNumber("PID", currentPIDVal);
+        //SmartDashboard.putNumber("setpoint", setpoint);
+        //SmartDashboard.putBoolean("topSwitch", limSwichTop.get());
+        //SmartDashboard.putBoolean("bottomSwitch", limSwitchBottom.get());
+        //SmartDashboard.putBoolean("manualRun", isManualRun);
 	}
 }

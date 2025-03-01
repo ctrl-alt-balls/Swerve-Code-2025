@@ -17,7 +17,7 @@ public class ArmSubsystem extends SubsystemBase {
     DutyCycleEncoder armEnc = new DutyCycleEncoder(4);
     SparkMax climberMotor = new SparkMax(20, MotorType.kBrushed);
 
-    DigitalInput coralSensor = new DigitalInput(4);
+    DigitalInput coralSensor = new DigitalInput(5);
 
     PIDController pidController = new PIDController(0.1, 0, 0);
     double rotSetpoint = 0;
@@ -79,6 +79,7 @@ public class ArmSubsystem extends SubsystemBase {
         }
 
         SmartDashboard.putNumber("DutyCycleEncoder", armEncVal);
+        SmartDashboard.putNumber("PID", currentPIDVal);
     }
 
 
