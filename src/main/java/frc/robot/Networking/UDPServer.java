@@ -13,6 +13,7 @@ import frc.mathstuff.PoopyMath;
 import frc.robot.Constants.AprilTagConstants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 
@@ -73,7 +74,11 @@ public class UDPServer extends SubsystemBase{
     double[] rotatedQuestPos = new double[2];
     double globalizeRot;
 
+
+    private final Field2d m_field = new Field2d();
+
     public UDPServer(int port){
+        SmartDashboard.putData("Field", m_field);
         try{
             socket = new DatagramSocket(port);
             System.out.println("Started UDP server on port " + socket.getLocalPort());
@@ -121,9 +126,9 @@ public class UDPServer extends SubsystemBase{
         // The first 12 bytes of the transmission are 3 floats. These floats are what the Quest thinks its position is
         // The format is quite similar to a Pose2D, but in floating point form instead of double precision.
         // The first float is the x-position, the second is the z-position, and the third is the y-rotation (euler angles)
-        recievedFloat[1]=penisBuffer.getFloat()-AprilTagConstants.questPositionFromRobotCenter[1];
+        recievedFloat[1]=-penisBuffer.getFloat()-AprilTagConstants.questPositionFromRobotCenter[1];
         recievedFloat[0]=penisBuffer.getFloat()-AprilTagConstants.questPositionFromRobotCenter[0];
-        recievedFloat[2]=penisBuffer.getFloat();
+        recievedFloat[2]=-penisBuffer.getFloat();
 
         if(takeSnapshot){
             rotSnapshot = recievedFloat[2];
@@ -141,7 +146,7 @@ public class UDPServer extends SubsystemBase{
 
         globalizedRecievedPose[0] = extraAccuracyPoseHoldValue[0]+rotatedRecievedFloat[0]-heheHawHawPoseOffset[0];
         globalizedRecievedPose[1] = extraAccuracyPoseHoldValue[1]+rotatedRecievedFloat[1]-heheHawHawPoseOffset[1];
-        globalizedRecievedPose[2] = globalizeRot-rotSnapshot+recievedFloat[2];
+        globalizedRecievedPose[2] = globalizeRot+recievedFloat[2];
 
         globalizedRecievedPose[2] %= 360;
         if(globalizedRecievedPose[2]<0){
@@ -171,11 +176,11 @@ public class UDPServer extends SubsystemBase{
         rotZ = new float[tagNum];
         for(int i = 0; i<tagNum; i++){
             id[i] = penisBuffer.getInt();
-            posX[i] = penisBuffer.getFloat();
+            posX[i] = -penisBuffer.getFloat();
             posY[i] = penisBuffer.getFloat();
             posZ[i] = penisBuffer.getFloat();
             rotX[i] = penisBuffer.getFloat();
-            rotY[i] = penisBuffer.getFloat();
+            rotY[i] = -penisBuffer.getFloat();
             rotZ[i] = penisBuffer.getFloat();
         }
         //totalCalls++;
@@ -222,6 +227,7 @@ public class UDPServer extends SubsystemBase{
                 extraAccuracyPose[1]=0;
                 extraAccuracyPose[2]=0;
                 takeSnapshot=true;
+                System.out.println("hiiiiiiiiiii :3");
             }
         }
     }
@@ -242,9 +248,14 @@ public class UDPServer extends SubsystemBase{
         return extraAccuracyPoseHoldValue;
     }
 
-    public void enableMotionlessCalib(int sampleAmount){
-        calibSamples=sampleAmount;
-        motionlessCalib=true;
+    public Command enableMotionlessCalib(int sampleAmount){
+        return runOnce(
+            ()->{
+                calibSamples=sampleAmount;
+                motionlessCalib=true;
+                System.out.println("fuck you");
+            }
+        );
     }
 
 
@@ -275,16 +286,16 @@ public class UDPServer extends SubsystemBase{
         poseFromTag[1]=0;
         poseFromTag[2]=0;
         for(int i = 0; i<tagNum; i++){
-            double[] rotatedPose = PoopyMath.rotateVector2(posZ[i],posX[i],AprilTagConstants.GetTagPosition(id[i])[2]+180);
-            poseFromTag[0] += AprilTagConstants.GetTagPosition(id[i])[0]-rotatedPose[0];//-AprilTagConstants.cameraPositionFromRobotCenter[0];
-            poseFromTag[1] += AprilTagConstants.GetTagPosition(id[i])[1]-rotatedPose[1];//-AprilTagConstants.cameraPositionFromRobotCenter[1];
+            double[] rotatedPose = PoopyMath.rotateVector2(posZ[i],posX[i],AprilTagConstants.GetTagPosition(id[i])[2]);
+            poseFromTag[0] += AprilTagConstants.GetTagPosition(id[i])[0]+rotatedPose[0];//-AprilTagConstants.cameraPositionFromRobotCenter[0];
+            poseFromTag[1] += AprilTagConstants.GetTagPosition(id[i])[1]+rotatedPose[1];//-AprilTagConstants.cameraPositionFromRobotCenter[1];
             poseFromTag[2] += AprilTagConstants.GetTagPosition(id[i])[2]-rotY[i];
         }
         poseFromTag[0]/=tagNum;
         poseFromTag[1]/=tagNum;
         poseFromTag[2]/=tagNum;
 
-        poseFromTag[2]+=180;
+        //poseFromTag[2]+=180;
 
         poseFromTag[2] %= 360;
         if(poseFromTag[2]<0){
@@ -311,17 +322,12 @@ public class UDPServer extends SubsystemBase{
         );
     }
 
-    /*
+    
     @Override
     public void periodic(){
-        
-        SmartDashboard.putString("Quest Pose", Arrays.toString(poseOffset));
-        SmartDashboard.putString("Calibrated Pose",Arrays.toString(calibratedPose));
-        //SmartDashboard.putNumber("executions", totalCalls);
-        SmartDashboard.putNumber("tagnum", tagNum);
-        
-
-
+        m_field.setRobotPose(getUwUPose());
+        SmartDashboard.putBoolean("calib", motionlessCalib);
+        SmartDashboard.putNumber("ids", tagNum);
+        SmartDashboard.putNumber("snapshot", rotSnapshot);
     }
-    */
 }

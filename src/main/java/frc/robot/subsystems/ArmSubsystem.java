@@ -19,8 +19,8 @@ public class ArmSubsystem extends SubsystemBase {
 
     DigitalInput coralSensor = new DigitalInput(5);
 
-    PIDController pidController = new PIDController(0.1, 0, 0);
-    double rotSetpoint = 0;
+    PIDController pidController = new PIDController(10, 0, 0);
+    double rotSetpoint = 0.3;
     double armEncVal;
     double currentPIDVal = 0;
 
@@ -64,7 +64,7 @@ public class ArmSubsystem extends SubsystemBase {
             currentPIDVal=-1;
         }
 
-        armRotNeo.set(currentPIDVal);
+        armRotNeo.set(-currentPIDVal);
 
         if(currentPIDVal<=pidMargin&&currentPIDVal>=-pidMargin){
             if(ejectCoral){

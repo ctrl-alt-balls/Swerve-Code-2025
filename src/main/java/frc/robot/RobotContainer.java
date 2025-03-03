@@ -86,7 +86,10 @@ public class RobotContainer {
 
         scorerController.povLeft().onTrue(elevatorSubsystem.Zero(-4, 0.5));
 
-        scorerController.rightBumper().whileTrue(arm.SetArmRotationCommand(scorerController.getLeftY()));
+        //scorerController.rightBumper().whileTrue(arm.SetArmRotationCommand(scorerController.getLeftY()));
+
+        scorerController.leftBumper().onTrue(arm.SetArmRotationCommand(0.95));
+        scorerController.rightBumper().onTrue(arm.SetArmRotationCommand(0.4));
 
         arm.initDefaultCommand();
         //scorerController.x().whileTrue(arm.RunClimber(0.6));
