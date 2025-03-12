@@ -11,6 +11,8 @@ import java.util.Arrays;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.mathstuff.PoopyMath;
 import frc.robot.Constants.AprilTagConstants;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -30,6 +32,31 @@ public class UDPServer extends SubsystemBase{
         float rotZ = 0;
     }
     */
+
+    static public class Double3 {
+        public double x;
+        public double y;
+        public double z;
+        public Double3(double x, double y, double z){
+            this.x=x;
+            this.y=y;
+            this.z=z;
+        }
+    }
+
+    public Double3[] path = new Double3[1];
+    int pathIndex = 0;
+    boolean[] atSetpoint = {false,false,false};
+
+    public boolean enableAuto = false;
+    double pidTransClamp = 1;
+    double pidRotClamp = 1;
+    PIDController pidTrans = new PIDController(0.5, 0, 0);
+    PIDController pidRot = new PIDController(0.1, 0, 0);
+    double[] pidValues = new double[3];
+    double[] poseSetpoint = new double[3];
+    double posSetpointTolerance = 0.2;
+    double rotSetpointTolerance = 0.2;
 
     DatagramSocket socket;
     float[] recievedFloat = new float[3];
@@ -52,7 +79,7 @@ public class UDPServer extends SubsystemBase{
 
     int id1 = 0;
 
-    boolean useAprilTags = false;
+    boolean useAprilTags = true;
 
     //int totalCalls = 0;
 
@@ -74,10 +101,17 @@ public class UDPServer extends SubsystemBase{
     double[] rotatedQuestPos = new double[2];
     double globalizeRot;
 
+    boolean testbool = false;
+
 
     private final Field2d m_field = new Field2d();
 
     public UDPServer(int port){
+        path[0] = new Double3(0, 0, 0);
+        pidTrans.setTolerance(posSetpointTolerance);
+        pidRot.setTolerance(rotSetpointTolerance);
+        pidRot.enableContinuousInput(-180, 180);
+        SmartDashboard.putBoolean("test", testbool);
         SmartDashboard.putData("Field", m_field);
         try{
             socket = new DatagramSocket(port);
@@ -176,11 +210,11 @@ public class UDPServer extends SubsystemBase{
         rotZ = new float[tagNum];
         for(int i = 0; i<tagNum; i++){
             id[i] = penisBuffer.getInt();
-            posX[i] = -penisBuffer.getFloat();
+            posX[i] = penisBuffer.getFloat();
             posY[i] = penisBuffer.getFloat();
             posZ[i] = penisBuffer.getFloat();
             rotX[i] = penisBuffer.getFloat();
-            rotY[i] = -penisBuffer.getFloat();
+            rotY[i] = penisBuffer.getFloat();
             rotZ[i] = penisBuffer.getFloat();
         }
         //totalCalls++;
@@ -203,9 +237,13 @@ public class UDPServer extends SubsystemBase{
         }
         */
 
+        if(tagNum>0&&useAprilTags){
+            setPoseFromTag();
+        }
+
         if(motionlessCalib&&tagNum>0){
             calibFinished=false;
-            setPoseFromTag();
+            //setPoseFromTag();
             extraAccuracyPose[0]+=poseFromTag[0];
             extraAccuracyPose[1]+=poseFromTag[1];
             extraAccuracyPose[2]+=poseFromTag[2];
@@ -230,6 +268,63 @@ public class UDPServer extends SubsystemBase{
                 System.out.println("hiiiiiiiiiii :3");
             }
         }
+
+        //yeah put code here
+        if(enableAuto){
+            pidValues[0] = MathUtil.clamp(pidTrans.calculate(globalizedRecievedPose[0],path[pathIndex].x),-pidTransClamp,pidTransClamp);
+            atSetpoint[0]=pidTrans.atSetpoint();
+            pidValues[1] = MathUtil.clamp(pidTrans.calculate(globalizedRecievedPose[1],path[pathIndex].y),-pidTransClamp,pidTransClamp);
+            atSetpoint[1]=pidTrans.atSetpoint();
+            pidValues[2] = MathUtil.clamp(pidRot.calculate(globalizedRecievedPose[2],path[pathIndex].z),-pidRotClamp,pidRotClamp);
+            atSetpoint[2] = pidRot.atSetpoint();
+        }else{
+            pidValues[0]=0;
+            pidValues[1]=0;
+            pidValues[2]=0;
+        }
+        updatePath();
+    }
+
+    void updatePath(){
+        if(atSetpoint[0]&&atSetpoint[1]&&atSetpoint[2]&&pathIndex<path.length-1){
+            pathIndex++;
+        }
+    }
+
+    public Command EnableAuto(){
+        return run(
+            ()->{
+                enableAuto=true;
+            }
+        );
+    }
+
+    public Command DisableAuto(){
+        return run(
+            ()->{
+                enableAuto=false;
+            }
+        );
+    }
+
+    public Command SetSetpoint(double[] setpoint){
+        return runOnce(
+            ()->{
+                poseSetpoint=setpoint;
+            }
+        );
+    }
+
+    public Command SetPath(Double3[] putThePathHereLOL){
+        return runOnce(
+            ()->{
+                path=putThePathHereLOL;
+            }
+        );
+    }
+
+    public double getPidValues(int index){
+        return pidValues[index];
     }
 
     public double[] getCalibratedPose(){
@@ -242,6 +337,10 @@ public class UDPServer extends SubsystemBase{
 
     public Pose2d getUwUPose(){
         return new Pose2d(globalizedRecievedPose[0],globalizedRecievedPose[1],new Rotation2d(Math.toRadians(globalizedRecievedPose[2])));
+    }
+
+    public Pose2d getTagPose(){
+        return new Pose2d(poseFromTag[0],poseFromTag[1],new Rotation2d(Math.toRadians(poseFromTag[2])));
     }
 
     public double[] getMotionlessCalibPose(){
@@ -286,9 +385,9 @@ public class UDPServer extends SubsystemBase{
         poseFromTag[1]=0;
         poseFromTag[2]=0;
         for(int i = 0; i<tagNum; i++){
-            double[] rotatedPose = PoopyMath.rotateVector2(posZ[i],posX[i],AprilTagConstants.GetTagPosition(id[i])[2]);
+            double[] rotatedPose = PoopyMath.rotateVector2(posZ[i],posX[i],AprilTagConstants.GetTagPosition(id[i])[2]/*-rotY[i]*/);
             poseFromTag[0] += AprilTagConstants.GetTagPosition(id[i])[0]+rotatedPose[0];//-AprilTagConstants.cameraPositionFromRobotCenter[0];
-            poseFromTag[1] += AprilTagConstants.GetTagPosition(id[i])[1]+rotatedPose[1];//-AprilTagConstants.cameraPositionFromRobotCenter[1];
+            poseFromTag[1] += AprilTagConstants.GetTagPosition(id[i])[1]-rotatedPose[1];//-AprilTagConstants.cameraPositionFromRobotCenter[1];
             poseFromTag[2] += AprilTagConstants.GetTagPosition(id[i])[2]-rotY[i];
         }
         poseFromTag[0]/=tagNum;
@@ -325,9 +424,24 @@ public class UDPServer extends SubsystemBase{
     
     @Override
     public void periodic(){
+        //m_field.setRobotPose(getUwUPose());
+        poseSetpoint[0]=path[0].x;
+        poseSetpoint[1]=path[0].y;
+        poseSetpoint[2]=path[0].z;
         m_field.setRobotPose(getUwUPose());
+        SmartDashboard.putNumber("pathIndex", pathIndex);
+        SmartDashboard.putNumberArray("calibPose",poseFromTag);
         SmartDashboard.putBoolean("calib", motionlessCalib);
         SmartDashboard.putNumber("ids", tagNum);
         SmartDashboard.putNumber("snapshot", rotSnapshot);
+        SmartDashboard.putNumberArray("Pid Values", pidValues);
+        SmartDashboard.putNumberArray("Setpoint", poseSetpoint);
+        if(SmartDashboard.getBoolean("test",false)){
+            System.out.println("peenor");
+            calibSamples=50;
+            motionlessCalib=true;
+            testbool=false;
+            SmartDashboard.putBoolean("test", testbool);
+        }
     }
 }

@@ -20,15 +20,27 @@ public class ArmSubsystem extends SubsystemBase {
     DigitalInput coralSensor = new DigitalInput(5);
 
     PIDController pidController = new PIDController(10, 0, 0);
-    double rotSetpoint = 0.3;
-    double armEncVal;
+    public double rotSetpoint = 0.3;
+    public double armEncVal;
     double currentPIDVal = 0;
+
+    public boolean enableArm = true;
 
     double pidMargin = 0.05;
     boolean ejectCoral = false;
     boolean intakeCoral = false;
     double ejectSpeed = 0.5;
     double intakeSpeed = 0.2;
+
+    public double armCollisionPoint = 0.4;
+    public double elevatorLowCollisionPoint;
+    public double elevatorHighCollisionPoint;
+
+    ElevatorSubsystem elevator;
+
+    public ArmSubsystem(ElevatorSubsystem elevatorSubsystem){
+        elevator=elevatorSubsystem;
+    }
 
 
     public Command SetArmRotationCommand(double setpointInput){
@@ -55,6 +67,13 @@ public class ArmSubsystem extends SubsystemBase {
     @Override
     public void periodic(){
         armEncVal = armEnc.get();
+
+        // disable elevator if arm will collide with it
+        if(armEncVal<=armCollisionPoint&&elevator.getEncVal()>=elevatorLowCollisionPoint||elevator.getEncVal()<=elevatorHighCollisionPoint){
+            elevator.enableElevator=false;
+        }else{
+            elevator.enableElevator=true;
+        }
         
         currentPIDVal = pidController.calculate(armEncVal, rotSetpoint);
 
@@ -64,7 +83,9 @@ public class ArmSubsystem extends SubsystemBase {
             currentPIDVal=-1;
         }
 
-        armRotNeo.set(-currentPIDVal);
+        if(enableArm){
+            armRotNeo.set(-currentPIDVal);
+        }
 
         if(currentPIDVal<=pidMargin&&currentPIDVal>=-pidMargin){
             if(ejectCoral){

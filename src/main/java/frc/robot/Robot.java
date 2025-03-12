@@ -27,7 +27,9 @@ public class Robot extends TimedRobot {
   public void disabledInit() {}
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    m_robotContainer.arm.rotSetpoint=m_robotContainer.arm.armEncVal;
+  }
 
   @Override
   public void disabledExit() {}
@@ -42,7 +44,9 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() {
+  
+  }
 
   @Override
   public void autonomousExit() {}

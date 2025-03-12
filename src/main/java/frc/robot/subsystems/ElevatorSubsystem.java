@@ -40,6 +40,8 @@ public class ElevatorSubsystem extends SubsystemBase{
     double bottomSwitchPIDResponse = 2;
 
     boolean isManualRun = false;
+
+    public boolean enableElevator = true;
     
     //private final ShuffleboardTab m_tab = Shuffleboard.getTab("Elevator");
 
@@ -64,7 +66,7 @@ public class ElevatorSubsystem extends SubsystemBase{
     public Command ManualRun(double speed){
         return run(
         () -> {
-            if(!limSwichTop.get()&&!limSwitchBottom.get()){
+            if(!limSwichTop.get()&&!limSwitchBottom.get()&&enableElevator){
                 isManualRun = true;
                 elevatorNeoLeft.set(speed);
                 elevatorNeoRight.set(-speed);
@@ -81,6 +83,10 @@ public class ElevatorSubsystem extends SubsystemBase{
                 //System.out.println("amogusFortnitepenisballs");
             }
         );
+    }
+
+    public double getEncVal(){
+        return encVal;
     }
 
     @Override
@@ -114,9 +120,12 @@ public class ElevatorSubsystem extends SubsystemBase{
             currentPIDVal=-1;
         }
 
-        if(!isManualRun){
+        if(!isManualRun&&enableElevator){
             elevatorNeoLeft.set(currentPIDVal);
             elevatorNeoRight.set(-currentPIDVal);
+        }else if(!isManualRun){
+            elevatorNeoLeft.set(0);
+            elevatorNeoRight.set(0);
         }
 
         //isManualRun = false;

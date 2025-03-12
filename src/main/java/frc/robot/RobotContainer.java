@@ -43,12 +43,12 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-    public final ArmSubsystem arm = new ArmSubsystem();
-
     // Port 5805 is the port I chose to communicate with the Quest over. Please do not change this, since it is hardcoded into the Quest app to communicate over this port
     public final UDPServer questServer = new UDPServer(5805);
     
     ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+
+    public final ArmSubsystem arm = new ArmSubsystem(elevatorSubsystem);
 
     /*
     public final Music music = new Music(
@@ -88,8 +88,8 @@ public class RobotContainer {
 
         //scorerController.rightBumper().whileTrue(arm.SetArmRotationCommand(scorerController.getLeftY()));
 
-        scorerController.leftBumper().onTrue(arm.SetArmRotationCommand(0.95));
-        scorerController.rightBumper().onTrue(arm.SetArmRotationCommand(0.4));
+        scorerController.leftBumper().onTrue(arm.SetArmRotationCommand(0.98));
+        scorerController.rightBumper().onTrue(arm.SetArmRotationCommand(0.2));
 
         arm.initDefaultCommand();
         //scorerController.x().whileTrue(arm.RunClimber(0.6));
