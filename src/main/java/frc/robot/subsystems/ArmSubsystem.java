@@ -10,8 +10,18 @@ import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.SubsystemConstants.SubsystemConstants;
 
 public class ArmSubsystem extends SubsystemBase {
+
+    enum Level{
+        L1,
+        L2,
+        L3,
+        L4,
+        CoralStation
+    }
+
     final TalonFX m_grippinator500 = new TalonFX(19,"rio");
     SparkMax armRotNeo = new SparkMax(18, MotorType.kBrushless);
     DutyCycleEncoder armEnc = new DutyCycleEncoder(4);
@@ -26,7 +36,7 @@ public class ArmSubsystem extends SubsystemBase {
 
     public boolean enableArm = true;
 
-    double pidMargin = 0.05;
+    double pidTolerance = 0.08;
     boolean ejectCoral = false;
     boolean intakeCoral = false;
     double ejectSpeed = 0.5;
@@ -40,6 +50,7 @@ public class ArmSubsystem extends SubsystemBase {
 
     public ArmSubsystem(ElevatorSubsystem elevatorSubsystem){
         elevator=elevatorSubsystem;
+        pidController.setTolerance(pidTolerance);
     }
 
 
@@ -64,6 +75,46 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
 
+    public Command Score(Level level){
+        return runOnce(
+            ()->{
+                switch(level){
+                    case L1:
+                        rotSetpoint = SubsystemConstants.ArmConstants.L1;
+                        elevator.setpoint = SubsystemConstants.ElevatorConstants.L1;
+                        ejectCoral = true;
+                        intakeCoral = false;
+                        break;
+                    case L2:
+                        rotSetpoint = SubsystemConstants.ArmConstants.L2;
+                        elevator.setpoint = SubsystemConstants.ElevatorConstants.L2;
+                        ejectCoral = true;
+                        intakeCoral = false;
+                        break;
+                    case L3:
+                        rotSetpoint = SubsystemConstants.ArmConstants.L3;
+                        elevator.setpoint = SubsystemConstants.ElevatorConstants.L3;
+                        ejectCoral = true;
+                        intakeCoral = false;
+                        break;
+                    case L4:
+                        rotSetpoint = SubsystemConstants.ArmConstants.L4;
+                        elevator.setpoint = SubsystemConstants.ElevatorConstants.L4;
+                        ejectCoral = true;
+                        intakeCoral = false;
+                        break;
+                    case CoralStation:
+                        rotSetpoint = SubsystemConstants.ArmConstants.CoralStation;
+                        elevator.setpoint = SubsystemConstants.ElevatorConstants.CoralStation;
+                        ejectCoral = false;
+                        intakeCoral = true;
+                        break;
+                }
+            }
+        );
+    }
+
+
     @Override
     public void periodic(){
         armEncVal = armEnc.get();
@@ -71,7 +122,7 @@ public class ArmSubsystem extends SubsystemBase {
         // disable elevator if arm will collide with it
         if(armEncVal<=armCollisionPoint&&elevator.getEncVal()>=elevatorLowCollisionPoint||elevator.getEncVal()<=elevatorHighCollisionPoint){
             elevator.enableElevator=false;
-        }else{
+        }else if (pidController.atSetpoint()){
             elevator.enableElevator=true;
         }
         
@@ -87,7 +138,7 @@ public class ArmSubsystem extends SubsystemBase {
             armRotNeo.set(-currentPIDVal);
         }
 
-        if(currentPIDVal<=pidMargin&&currentPIDVal>=-pidMargin){
+        if(pidController.atSetpoint()&&elevator.pidController.atSetpoint()){
             if(ejectCoral){
                 m_grippinator500.set(ejectSpeed);
             }else if(intakeCoral&&!coralSensor.get()){

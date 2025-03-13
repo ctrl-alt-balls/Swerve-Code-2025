@@ -14,7 +14,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 public class ElevatorSubsystem extends SubsystemBase{
     SparkMax elevatorNeoRight = new SparkMax(17, MotorType.kBrushless);
     SparkMax elevatorNeoLeft = new SparkMax(16, MotorType.kBrushless);
-    PIDController pidController = new PIDController(1, 0.0, 0.0);
+    public PIDController pidController = new PIDController(1, 0.0, 0.0);
 
     PIDController ratePIDController = new PIDController(0.1, 0.0, 0);
 
@@ -31,10 +31,11 @@ public class ElevatorSubsystem extends SubsystemBase{
     double zeroExitSpeed;
     boolean isBottomed = false;
 
-    double setpoint;
+    public double setpoint;
     double encVal;
     double encRate;
     double currentPIDVal;
+    double zeroedEncVal;
 
     double topSwitchPIDResponse = -2;
     double bottomSwitchPIDResponse = 2;
@@ -42,8 +43,14 @@ public class ElevatorSubsystem extends SubsystemBase{
     boolean isManualRun = false;
 
     public boolean enableElevator = true;
+
+    double pidTolerance = 0.8;
     
     //private final ShuffleboardTab m_tab = Shuffleboard.getTab("Elevator");
+
+    public ElevatorSubsystem(){
+        pidController.setTolerance(pidTolerance);
+    }
 
     public Command SetPositionCommand(double setpointInput){
         return runOnce(
@@ -86,13 +93,14 @@ public class ElevatorSubsystem extends SubsystemBase{
     }
 
     public double getEncVal(){
-        return encVal;
+        return zeroedEncVal;
     }
 
     @Override
 	public void periodic() {
         encVal = -elevEnc.getDistance()/2000;
         encRate = -elevEnc.getRate()/2000;
+        zeroedEncVal = encVal-elevatorZero;
 
         if(isZeroing&&!limSwitchBottom.get()&&!isBottomed){
             currentPIDVal = ratePIDController.calculate(encRate,zeroInitSpeed);
@@ -111,7 +119,7 @@ public class ElevatorSubsystem extends SubsystemBase{
             currentPIDVal=ratePIDController.calculate(encRate,bottomSwitchPIDResponse);
             isManualRun = false;
         }else{
-            currentPIDVal = pidController.calculate(encVal-elevatorZero,setpoint);
+            currentPIDVal = pidController.calculate(zeroedEncVal,setpoint);
         }
 
         if(currentPIDVal>1){
