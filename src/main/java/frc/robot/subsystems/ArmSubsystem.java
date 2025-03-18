@@ -5,21 +5,22 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Networking.UDPServer;
 import frc.robot.subsystems.SubsystemConstants.SubsystemConstants;
 
 public class ArmSubsystem extends SubsystemBase {
 
-    enum Level{
+    public static enum Level{
         L1,
         L2,
         L3,
         L4,
-        CoralStation
+        CoralStation,
+        Resting
     }
 
     final TalonFX m_grippinator500 = new TalonFX(19,"rio");
@@ -27,7 +28,7 @@ public class ArmSubsystem extends SubsystemBase {
     DutyCycleEncoder armEnc = new DutyCycleEncoder(4);
     SparkMax climberMotor = new SparkMax(20, MotorType.kBrushed);
 
-    DigitalInput coralSensor = new DigitalInput(5);
+    //DigitalInput coralSensor = new DigitalInput(5);
 
     PIDController pidController = new PIDController(10, 0, 0);
     public double rotSetpoint = 0.3;
@@ -46,13 +47,37 @@ public class ArmSubsystem extends SubsystemBase {
     public double elevatorLowCollisionPoint;
     public double elevatorHighCollisionPoint;
 
-    ElevatorSubsystem elevator;
+    boolean manualGrippinatorMovement = false;
+    boolean automaticGrippinatorMovement = false;
 
-    public ArmSubsystem(ElevatorSubsystem elevatorSubsystem){
-        elevator=elevatorSubsystem;
+    ElevatorSubsystem elevator;
+    UDPServer questServer;
+
+    double intakeCurrentLimit = 10;
+    double grippinatorCurrent;
+
+    public ArmSubsystem(ElevatorSubsystem elevatorSubsystem,UDPServer udpServer){
+        this.elevator=elevatorSubsystem;
         pidController.setTolerance(pidTolerance);
+        this.questServer=udpServer;
     }
 
+    public Command DefaultArmCommand(){
+        return run(
+            ()->{
+                RunClimber(0.0);
+                manualGrippinatorMovement=false;
+            }
+        );
+    }
+
+    public Command EnableManualGrippinator(){
+        return run(
+            ()->{
+                manualGrippinatorMovement=true;
+            }
+        );
+    }
 
     public Command SetArmRotationCommand(double setpointInput){
         return runOnce(
@@ -64,7 +89,7 @@ public class ArmSubsystem extends SubsystemBase {
 
     public void initDefaultCommand() {
         // Set the default command for a subsystem here.
-        setDefaultCommand(RunClimber(0.0));
+        setDefaultCommand(DefaultArmCommand());
     }
 
     public Command RunClimber(double speed){
@@ -109,6 +134,11 @@ public class ArmSubsystem extends SubsystemBase {
                         ejectCoral = false;
                         intakeCoral = true;
                         break;
+                    case Resting:
+                        rotSetpoint=SubsystemConstants.ArmConstants.Resting;
+                        elevator.setpoint=SubsystemConstants.ElevatorConstants.Resting;
+                        ejectCoral=false;
+                        intakeCoral=false;
                 }
             }
         );
@@ -117,12 +147,13 @@ public class ArmSubsystem extends SubsystemBase {
 
     @Override
     public void periodic(){
+        grippinatorCurrent = m_grippinator500.getSupplyCurrent().getValueAsDouble();
         armEncVal = armEnc.get();
 
         // disable elevator if arm will collide with it
         if(armEncVal<=armCollisionPoint&&elevator.getEncVal()>=elevatorLowCollisionPoint||elevator.getEncVal()<=elevatorHighCollisionPoint){
             elevator.enableElevator=false;
-        }else if (pidController.atSetpoint()){
+        }else if (pidController.atSetpoint()/*&&questServer.atPose()*/){
             elevator.enableElevator=true;
         }
         
@@ -138,10 +169,10 @@ public class ArmSubsystem extends SubsystemBase {
             armRotNeo.set(-currentPIDVal);
         }
 
-        if(pidController.atSetpoint()&&elevator.pidController.atSetpoint()){
+        if(pidController.atSetpoint()&&elevator.pidController.atSetpoint()&&(manualGrippinatorMovement||automaticGrippinatorMovement)){
             if(ejectCoral){
                 m_grippinator500.set(ejectSpeed);
-            }else if(intakeCoral&&!coralSensor.get()){
+            }else if(intakeCoral&&grippinatorCurrent<intakeCurrentLimit){
                 m_grippinator500.set(intakeSpeed);
             }else{
                 m_grippinator500.set(0);
@@ -152,6 +183,7 @@ public class ArmSubsystem extends SubsystemBase {
 
         SmartDashboard.putNumber("DutyCycleEncoder", armEncVal);
         SmartDashboard.putNumber("PID", currentPIDVal);
+        SmartDashboard.putNumber("Grippinator Current", grippinatorCurrent);
     }
 
 

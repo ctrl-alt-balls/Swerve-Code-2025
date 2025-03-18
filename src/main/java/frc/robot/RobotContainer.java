@@ -19,15 +19,20 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.ArmSubsystem.Level;
 import frc.robot.Networking.UDPServer;
 
 public class RobotContainer {
+
+    private double drivetrainSpeedMultiplier = 3;
+    private double drivetrainRotationMultiplier = 1;
+
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDeadband(0.05*MaxSpeed).withRotationalDeadband(0.05*MaxSpeed) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
@@ -42,9 +47,9 @@ public class RobotContainer {
     // Port 5805 is the port I chose to communicate with the Quest over. Please do not change this, since it is hardcoded into the Quest app to communicate over this port
     public final UDPServer questServer = new UDPServer(5805);
     
-    ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+    public final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
 
-    public final ArmSubsystem arm = new ArmSubsystem(elevatorSubsystem);
+    public final ArmSubsystem arm = new ArmSubsystem(elevatorSubsystem,questServer);
 
     /*
     public final Music music = new Music(
@@ -69,34 +74,41 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
+        arm.initDefaultCommand();
+        elevatorSubsystem.initDefaultCommand();
 
-        scorerController.a().onTrue(elevatorSubsystem.SetPositionCommand(2));
-        scorerController.b().onTrue(elevatorSubsystem.SetPositionCommand(5));
 
-        // Some testing stuff for elevator
-        scorerController.x().onTrue(elevatorSubsystem.ManualRun(0.5));
-        scorerController.y().onTrue(elevatorSubsystem.ManualRun(-0.5));
-        scorerController.x().whileFalse(elevatorSubsystem.DisableManualRun());
-        scorerController.y().whileFalse(elevatorSubsystem.DisableManualRun());
+        
 
+        // Elevator manual run
+        scorerController.rightBumper().whileTrue(elevatorSubsystem.ManualRun(scorerController.getLeftY()));
+        //scorerController.x().onTrue(elevatorSubsystem.ManualRun(0.5));
+        //scorerController.y().onTrue(elevatorSubsystem.ManualRun(-0.5));
 
         scorerController.povLeft().onTrue(elevatorSubsystem.Zero(-4, 0.5));
 
-        //scorerController.rightBumper().whileTrue(arm.SetArmRotationCommand(scorerController.getLeftY()));
+        //scorerController.leftBumper().whileTrue(arm.RunClimber(0.6));
+        //scorerController.rightBumper().whileTrue(arm.RunClimber(-0.6));
 
-        scorerController.leftBumper().onTrue(arm.SetArmRotationCommand(0.98));
-        scorerController.rightBumper().onTrue(arm.SetArmRotationCommand(0.2));
+        // Scoring
+        scorerController.a().onTrue(arm.Score(ArmSubsystem.Level.L1));
+        scorerController.b().onTrue(arm.Score(ArmSubsystem.Level.L2));
+        scorerController.x().onTrue(arm.Score(ArmSubsystem.Level.L3));
+        scorerController.y().onTrue(arm.Score(ArmSubsystem.Level.L4));
 
-        arm.initDefaultCommand();
-        //scorerController.x().whileTrue(arm.RunClimber(0.6));
-        //scorerController.y().whileTrue(arm.RunClimber(-0.6));
+        // Intaking and shooting
+        driverController.x().onTrue(arm.Score(ArmSubsystem.Level.CoralStation));
+        driverController.y().onTrue(arm.Score(ArmSubsystem.Level.Resting));
+        driverController.rightBumper().whileTrue(arm.EnableManualGrippinator());
+
+
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                drive.withVelocityX(-driverController.getLeftY()*drivetrainSpeedMultiplier) // Drive forward with negative Y (forward)
+                    .withVelocityY(-driverController.getLeftX()*drivetrainSpeedMultiplier) // Drive left with negative X (left)
                     .withRotationalRate(-driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
@@ -109,16 +121,16 @@ public class RobotContainer {
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        driverController.back().and(driverController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        driverController.back().and(driverController.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        driverController.start().and(driverController.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        //driverController.back().and(driverController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        //driverController.back().and(driverController.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        //driverController.start().and(driverController.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        //driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
         driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         // Press this to print out data recieved from the Quest
-        driverController.povDown().onTrue(questServer.ErmWhatTheSigma());
+        //driverController.povDown().onTrue(questServer.ErmWhatTheSigma());
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

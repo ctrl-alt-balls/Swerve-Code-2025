@@ -52,6 +52,11 @@ public class ElevatorSubsystem extends SubsystemBase{
         pidController.setTolerance(pidTolerance);
     }
 
+    public void initDefaultCommand() {
+        // Set the default command for a subsystem here.
+        setDefaultCommand(DisableManualRun());
+    }
+
     public Command SetPositionCommand(double setpointInput){
         return runOnce(
             ()->{

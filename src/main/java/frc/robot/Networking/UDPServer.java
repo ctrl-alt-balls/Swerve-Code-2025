@@ -103,6 +103,9 @@ public class UDPServer extends SubsystemBase{
 
     boolean testbool = false;
 
+    boolean pathOrSetpoint = false;
+    boolean atSetpointReturnBool = false;
+
 
     private final Field2d m_field = new Field2d();
 
@@ -270,25 +273,46 @@ public class UDPServer extends SubsystemBase{
         }
 
         //yeah put code here
-        if(enableAuto){
+        if(enableAuto&&pathOrSetpoint){
+            updatePath();
             pidValues[0] = MathUtil.clamp(pidTrans.calculate(globalizedRecievedPose[0],path[pathIndex].x),-pidTransClamp,pidTransClamp);
             atSetpoint[0]=pidTrans.atSetpoint();
             pidValues[1] = MathUtil.clamp(pidTrans.calculate(globalizedRecievedPose[1],path[pathIndex].y),-pidTransClamp,pidTransClamp);
             atSetpoint[1]=pidTrans.atSetpoint();
             pidValues[2] = MathUtil.clamp(pidRot.calculate(globalizedRecievedPose[2],path[pathIndex].z),-pidRotClamp,pidRotClamp);
             atSetpoint[2] = pidRot.atSetpoint();
+        }else if(enableAuto){
+            pidValues[0] = MathUtil.clamp(pidTrans.calculate(globalizedRecievedPose[0],path[pathIndex].x),-pidTransClamp,pidTransClamp);
+            atSetpoint[0]=pidTrans.atSetpoint();
+            pidValues[1] = MathUtil.clamp(pidTrans.calculate(globalizedRecievedPose[1],path[pathIndex].y),-pidTransClamp,pidTransClamp);
+            atSetpoint[1]=pidTrans.atSetpoint();
+            pidValues[2] = MathUtil.clamp(pidRot.calculate(globalizedRecievedPose[2],path[pathIndex].z),-pidRotClamp,pidRotClamp);
+            atSetpoint[2] = pidRot.atSetpoint();
+            if(atSetpoint[0]&&atSetpoint[1]&&atSetpoint[2]){
+                atSetpointReturnBool=true;
+            }else{
+                atSetpointReturnBool=false;
+            }
         }else{
             pidValues[0]=0;
             pidValues[1]=0;
             pidValues[2]=0;
         }
-        updatePath();
+        //updatePath();
     }
 
     void updatePath(){
         if(atSetpoint[0]&&atSetpoint[1]&&atSetpoint[2]&&pathIndex<path.length-1){
             pathIndex++;
+        }else if(atSetpoint[0]&&atSetpoint[1]&&atSetpoint[2]){
+            atSetpointReturnBool = true;
+        }else{
+            atSetpointReturnBool=false;
         }
+    }
+
+    public boolean atPose(){
+        return atSetpointReturnBool;
     }
 
     public Command EnableAuto(){
@@ -311,6 +335,7 @@ public class UDPServer extends SubsystemBase{
         return runOnce(
             ()->{
                 poseSetpoint=setpoint;
+                pathOrSetpoint=false;
             }
         );
     }
@@ -319,6 +344,7 @@ public class UDPServer extends SubsystemBase{
         return runOnce(
             ()->{
                 path=putThePathHereLOL;
+                pathOrSetpoint=true;
             }
         );
     }
