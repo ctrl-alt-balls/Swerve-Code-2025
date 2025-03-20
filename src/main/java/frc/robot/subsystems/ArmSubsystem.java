@@ -20,6 +20,9 @@ public class ArmSubsystem extends SubsystemBase {
         L3,
         L4,
         CoralStation,
+        AlgaeReef1,
+        AlgaeReef2,
+        AlgaeBarge,
         Resting
     }
 
@@ -27,6 +30,7 @@ public class ArmSubsystem extends SubsystemBase {
     SparkMax armRotNeo = new SparkMax(18, MotorType.kBrushless);
     DutyCycleEncoder armEnc = new DutyCycleEncoder(4);
     SparkMax climberMotor = new SparkMax(20, MotorType.kBrushed);
+    SparkMax algaeMotor = new SparkMax(21, MotorType.kBrushless);
 
     //DigitalInput coralSensor = new DigitalInput(5);
 
@@ -56,6 +60,14 @@ public class ArmSubsystem extends SubsystemBase {
     double intakeCurrentLimit = 10;
     double grippinatorCurrent;
 
+    boolean overCurrent = false;
+
+    // Algae stuff
+    boolean intakeAlgae = false;
+    boolean shootAlgae = false;
+    double algaeIntakeSpeed = -0.2;
+    double algaeShootSpeed = 1;
+
     public ArmSubsystem(ElevatorSubsystem elevatorSubsystem,UDPServer udpServer){
         this.elevator=elevatorSubsystem;
         pidController.setTolerance(pidTolerance);
@@ -67,6 +79,7 @@ public class ArmSubsystem extends SubsystemBase {
             ()->{
                 RunClimber(0.0);
                 manualGrippinatorMovement=false;
+                shootAlgae=false;
             }
         );
     }
@@ -99,6 +112,14 @@ public class ArmSubsystem extends SubsystemBase {
         });
     }
 
+    public Command ShootAlgae(){
+        return run(
+            ()->{
+                shootAlgae=true;
+            }
+        );
+    }
+
 
     public Command Score(Level level){
         return runOnce(
@@ -109,36 +130,80 @@ public class ArmSubsystem extends SubsystemBase {
                         elevator.setpoint = SubsystemConstants.ElevatorConstants.L1;
                         ejectCoral = true;
                         intakeCoral = false;
+                        automaticGrippinatorMovement=false;
+                        intakeAlgae = false;
+                        shootAlgae = false;
                         break;
                     case L2:
                         rotSetpoint = SubsystemConstants.ArmConstants.L2;
                         elevator.setpoint = SubsystemConstants.ElevatorConstants.L2;
                         ejectCoral = true;
                         intakeCoral = false;
+                        automaticGrippinatorMovement=false;
+                        intakeAlgae = false;
+                        shootAlgae = false;
                         break;
                     case L3:
                         rotSetpoint = SubsystemConstants.ArmConstants.L3;
                         elevator.setpoint = SubsystemConstants.ElevatorConstants.L3;
                         ejectCoral = true;
                         intakeCoral = false;
+                        automaticGrippinatorMovement=false;
+                        intakeAlgae = false;
+                        shootAlgae = false;
                         break;
                     case L4:
                         rotSetpoint = SubsystemConstants.ArmConstants.L4;
                         elevator.setpoint = SubsystemConstants.ElevatorConstants.L4;
                         ejectCoral = true;
                         intakeCoral = false;
+                        automaticGrippinatorMovement=false;
+                        intakeAlgae = false;
+                        shootAlgae = false;
                         break;
                     case CoralStation:
                         rotSetpoint = SubsystemConstants.ArmConstants.CoralStation;
                         elevator.setpoint = SubsystemConstants.ElevatorConstants.CoralStation;
                         ejectCoral = false;
                         intakeCoral = true;
+                        automaticGrippinatorMovement=true;
+                        overCurrent=false;
+                        intakeAlgae = false;
+                        shootAlgae = false;
+                        break;
+                    case AlgaeReef1:
+                        rotSetpoint = SubsystemConstants.ArmConstants.AlgaeReef1;
+                        elevator.setpoint = SubsystemConstants.ElevatorConstants.AlgaeReef1;
+                        ejectCoral = false;
+                        intakeCoral = false;
+                        intakeAlgae = true;
+                        shootAlgae = false;
+                        break;
+                    case AlgaeReef2:
+                        rotSetpoint = SubsystemConstants.ArmConstants.AlgaeReef2;
+                        elevator.setpoint = SubsystemConstants.ElevatorConstants.AlgaeReef2;
+                        ejectCoral = false;
+                        intakeCoral = false;
+                        intakeAlgae = true;
+                        shootAlgae = false;
+                        break;
+                    case AlgaeBarge:
+                        rotSetpoint = SubsystemConstants.ArmConstants.AlgaeBarge;
+                        elevator.setpoint = SubsystemConstants.ElevatorConstants.AlgaeBarge;
+                        ejectCoral = false;
+                        intakeCoral = false;
+                        intakeAlgae = false;
+                        shootAlgae = true;
                         break;
                     case Resting:
                         rotSetpoint=SubsystemConstants.ArmConstants.Resting;
                         elevator.setpoint=SubsystemConstants.ElevatorConstants.Resting;
                         ejectCoral=false;
                         intakeCoral=false;
+                        automaticGrippinatorMovement=false;
+                        intakeAlgae = false;
+                        //shootAlgae = false;
+                        break;
                 }
             }
         );
@@ -169,16 +234,28 @@ public class ArmSubsystem extends SubsystemBase {
             armRotNeo.set(-currentPIDVal);
         }
 
+        if(grippinatorCurrent>intakeCurrentLimit){
+            overCurrent = true;
+        }
+
         if(pidController.atSetpoint()&&elevator.pidController.atSetpoint()&&(manualGrippinatorMovement||automaticGrippinatorMovement)){
             if(ejectCoral){
                 m_grippinator500.set(ejectSpeed);
-            }else if(intakeCoral&&grippinatorCurrent<intakeCurrentLimit){
+            }else if(intakeCoral&&!overCurrent){
                 m_grippinator500.set(intakeSpeed);
             }else{
                 m_grippinator500.set(0);
             }
         }else{
             m_grippinator500.set(0);
+        }
+
+        if(intakeAlgae){
+            algaeMotor.set(algaeIntakeSpeed);
+        }else if(shootAlgae){
+            algaeMotor.set(algaeShootSpeed);
+        }else{
+            algaeMotor.set(0);
         }
 
         SmartDashboard.putNumber("DutyCycleEncoder", armEncVal);

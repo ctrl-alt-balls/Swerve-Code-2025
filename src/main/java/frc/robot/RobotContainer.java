@@ -27,6 +27,8 @@ public class RobotContainer {
     private double drivetrainSpeedMultiplier = 3;
     private double drivetrainRotationMultiplier = 1;
 
+    ArmSubsystem.Level levelSelect;
+
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
@@ -90,16 +92,16 @@ public class RobotContainer {
         //scorerController.leftBumper().whileTrue(arm.RunClimber(0.6));
         //scorerController.rightBumper().whileTrue(arm.RunClimber(-0.6));
 
-        // Scoring
-        scorerController.a().onTrue(arm.Score(ArmSubsystem.Level.L1));
-        scorerController.b().onTrue(arm.Score(ArmSubsystem.Level.L2));
-        scorerController.x().onTrue(arm.Score(ArmSubsystem.Level.L3));
-        scorerController.y().onTrue(arm.Score(ArmSubsystem.Level.L4));
+        // Scoring select
+        scorerController.a().onTrue(Commands.runOnce(()->{levelSelect = ArmSubsystem.Level.L1;}));
+        scorerController.b().onTrue(Commands.runOnce(()->{levelSelect = ArmSubsystem.Level.L2;}));
+        scorerController.x().onTrue(Commands.runOnce(()->{levelSelect = ArmSubsystem.Level.L3;}));
+        scorerController.y().onTrue(Commands.runOnce(()->{levelSelect = ArmSubsystem.Level.L4;}));
 
-        // Intaking and shooting
-        driverController.x().onTrue(arm.Score(ArmSubsystem.Level.CoralStation));
-        driverController.y().onTrue(arm.Score(ArmSubsystem.Level.Resting));
-        driverController.rightBumper().whileTrue(arm.EnableManualGrippinator());
+        // Intaking and scoring
+        driverController.leftTrigger().and(driverController.rightTrigger()).whileFalse(arm.Score(ArmSubsystem.Level.Resting));
+        driverController.leftTrigger().whileTrue(arm.Score(levelSelect));
+        driverController.rightTrigger().whileTrue(arm.Score(ArmSubsystem.Level.CoralStation));
 
 
         // Note that X is defined as forward according to WPILib convention,
