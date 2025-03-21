@@ -115,7 +115,7 @@ public class UDPServer extends SubsystemBase{
         pidRot.setTolerance(rotSetpointTolerance);
         pidRot.enableContinuousInput(-180, 180);
         SmartDashboard.putBoolean("test", testbool);
-        SmartDashboard.putData("Field", m_field);
+        //SmartDashboard.putData("Field", m_field);
         try{
             socket = new DatagramSocket(port);
             System.out.println("Started UDP server on port " + socket.getLocalPort());
@@ -455,13 +455,13 @@ public class UDPServer extends SubsystemBase{
         poseSetpoint[1]=path[0].y;
         poseSetpoint[2]=path[0].z;
         m_field.setRobotPose(getUwUPose());
-        SmartDashboard.putNumber("pathIndex", pathIndex);
-        SmartDashboard.putNumberArray("calibPose",poseFromTag);
-        SmartDashboard.putBoolean("calib", motionlessCalib);
-        SmartDashboard.putNumber("ids", tagNum);
-        SmartDashboard.putNumber("snapshot", rotSnapshot);
-        SmartDashboard.putNumberArray("Pid Values", pidValues);
-        SmartDashboard.putNumberArray("Setpoint", poseSetpoint);
+        //SmartDashboard.putNumber("pathIndex", pathIndex);
+        //SmartDashboard.putNumberArray("calibPose",poseFromTag);
+        //SmartDashboard.putBoolean("calib", motionlessCalib);
+        //SmartDashboard.putNumber("ids", tagNum);
+        //SmartDashboard.putNumber("snapshot", rotSnapshot);
+        //SmartDashboard.putNumberArray("Pid Values", pidValues);
+        //SmartDashboard.putNumberArray("Setpoint", poseSetpoint);
         if(SmartDashboard.getBoolean("test",false)){
             System.out.println("peenor");
             calibSamples=50;

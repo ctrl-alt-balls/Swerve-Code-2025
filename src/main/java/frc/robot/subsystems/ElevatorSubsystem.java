@@ -45,6 +45,8 @@ public class ElevatorSubsystem extends SubsystemBase{
     public boolean enableElevator = true;
 
     double pidTolerance = 0.8;
+
+    double manualRunVal = 0;
     
     //private final ShuffleboardTab m_tab = Shuffleboard.getTab("Elevator");
 
@@ -54,7 +56,7 @@ public class ElevatorSubsystem extends SubsystemBase{
 
     public void initDefaultCommand() {
         // Set the default command for a subsystem here.
-        setDefaultCommand(DisableManualRun());
+        //setDefaultCommand(DisableManualRun());
     }
 
     public Command SetPositionCommand(double setpointInput){
@@ -80,8 +82,9 @@ public class ElevatorSubsystem extends SubsystemBase{
         () -> {
             if(!limSwichTop.get()&&!limSwitchBottom.get()&&enableElevator){
                 isManualRun = true;
-                elevatorNeoLeft.set(speed);
-                elevatorNeoRight.set(-speed);
+                manualRunVal = speed;
+                //elevatorNeoLeft.set(speed);
+                //elevatorNeoRight.set(-speed);
             }
         });
     }
@@ -90,8 +93,8 @@ public class ElevatorSubsystem extends SubsystemBase{
         return run(
             ()->{
                 isManualRun=false;
-                elevatorNeoLeft.set(0);
-                elevatorNeoRight.set(0);
+                //elevatorNeoLeft.set(0);
+                //elevatorNeoRight.set(0);
                 //System.out.println("amogusFortnitepenisballs");
             }
         );
@@ -127,28 +130,40 @@ public class ElevatorSubsystem extends SubsystemBase{
             currentPIDVal = pidController.calculate(zeroedEncVal,setpoint);
         }
 
+        /*
+        if(isManualRun){
+            currentPIDVal=manualRunVal;
+        }
+        */
+
         if(currentPIDVal>1){
             currentPIDVal=1;
         }else if(currentPIDVal<-1){
             currentPIDVal=-1;
         }
 
+        /*
         if(!isManualRun&&enableElevator){
-            elevatorNeoLeft.set(currentPIDVal);
-            elevatorNeoRight.set(-currentPIDVal);
+            elevatorNeoLeft.set(-currentPIDVal);
+            elevatorNeoRight.set(currentPIDVal);
         }else if(!isManualRun){
-            elevatorNeoLeft.set(0);
-            elevatorNeoRight.set(0);
+            //elevatorNeoLeft.set(0);
+            //elevatorNeoRight.set(0);
         }
+        */
+        
+        elevatorNeoLeft.set(-currentPIDVal);
+        elevatorNeoRight.set(currentPIDVal);
 
         //isManualRun = false;
 
 		//SmartDashboard.putNumber("Encoder", encVal-elevatorZero);
         //SmartDashboard.putNumber("EncoderRate", encRate);
-        //SmartDashboard.putNumber("PID", currentPIDVal);
+        SmartDashboard.putNumber("PID", currentPIDVal);
         //SmartDashboard.putNumber("setpoint", setpoint);
-        //SmartDashboard.putBoolean("topSwitch", limSwichTop.get());
-        //SmartDashboard.putBoolean("bottomSwitch", limSwitchBottom.get());
+        SmartDashboard.putBoolean("topSwitch", limSwichTop.get());
+        SmartDashboard.putBoolean("bottomSwitch", limSwitchBottom.get());
         //SmartDashboard.putBoolean("manualRun", isManualRun);
+        SmartDashboard.putNumber("ElevEncVal", zeroedEncVal);
 	}
 }

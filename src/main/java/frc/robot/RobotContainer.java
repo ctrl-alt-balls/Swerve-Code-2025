@@ -24,10 +24,12 @@ import frc.robot.Networking.UDPServer;
 
 public class RobotContainer {
 
+    double[] setpoint = {0,0,0};
+
     private double drivetrainSpeedMultiplier = 3;
     private double drivetrainRotationMultiplier = 1;
 
-    ArmSubsystem.Level levelSelect;
+    //ArmSubsystem.Level levelSelect;
 
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
@@ -83,7 +85,8 @@ public class RobotContainer {
         
 
         // Elevator manual run
-        scorerController.rightBumper().whileTrue(elevatorSubsystem.ManualRun(scorerController.getLeftY()));
+        //scorerController.rightBumper().whileTrue(elevatorSubsystem.ManualRun(0.4));
+        //scorerController.rightBumper().whileFalse(elevatorSubsystem.DisableManualRun());
         //scorerController.x().onTrue(elevatorSubsystem.ManualRun(0.5));
         //scorerController.y().onTrue(elevatorSubsystem.ManualRun(-0.5));
 
@@ -92,16 +95,21 @@ public class RobotContainer {
         //scorerController.leftBumper().whileTrue(arm.RunClimber(0.6));
         //scorerController.rightBumper().whileTrue(arm.RunClimber(-0.6));
 
+        scorerController.leftBumper().whileTrue(arm.ManualGrippinator(0.2));
+        scorerController.leftBumper().whileFalse(arm.DisableManualGrippinator());
+        //scorerController.leftBumper().whileFalse(arm.ManualGrippinator(0.0));
+
         // Scoring select
-        scorerController.a().onTrue(Commands.runOnce(()->{levelSelect = ArmSubsystem.Level.L1;}));
-        scorerController.b().onTrue(Commands.runOnce(()->{levelSelect = ArmSubsystem.Level.L2;}));
-        scorerController.x().onTrue(Commands.runOnce(()->{levelSelect = ArmSubsystem.Level.L3;}));
-        scorerController.y().onTrue(Commands.runOnce(()->{levelSelect = ArmSubsystem.Level.L4;}));
+        scorerController.a().onTrue(arm.SetStoreVal(ArmSubsystem.Level.L1));
+        scorerController.b().onTrue(arm.SetStoreVal(ArmSubsystem.Level.L2));
+        scorerController.x().onTrue(arm.SetStoreVal(ArmSubsystem.Level.L3));
+        scorerController.y().onTrue(arm.SetStoreVal(ArmSubsystem.Level.L4));
 
         // Intaking and scoring
-        driverController.leftTrigger().and(driverController.rightTrigger()).whileFalse(arm.Score(ArmSubsystem.Level.Resting));
-        driverController.leftTrigger().whileTrue(arm.Score(levelSelect));
+        //driverController.leftTrigger().and(driverController.rightTrigger()).whileFalse(arm.Score(ArmSubsystem.Level.Resting));
+        driverController.leftTrigger().whileTrue(arm.StoreScore());
         driverController.rightTrigger().whileTrue(arm.Score(ArmSubsystem.Level.CoralStation));
+        driverController.rightBumper().whileTrue(arm.EnableManualGrippinator());
 
 
         // Note that X is defined as forward according to WPILib convention,
@@ -114,6 +122,17 @@ public class RobotContainer {
                     .withRotationalRate(-driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
+
+        driverController.x().onTrue(questServer.SetSetpoint(setpoint));
+
+        driverController.x().whileTrue(drivetrain.applyRequest(() ->
+            drive.withVelocityX(questServer.getPidValues(0)*drivetrainSpeedMultiplier) 
+                .withVelocityY(questServer.getPidValues(1)*drivetrainSpeedMultiplier) 
+                .withRotationalRate(questServer.getPidValues(2) * MaxAngularRate) 
+        ));
+
+        driverController.x().whileTrue(questServer.EnableAuto());
+        driverController.x().whileFalse(questServer.DisableAuto());
 
         
         driverController.a().whileTrue(drivetrain.applyRequest(() -> brake));
@@ -138,6 +157,10 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return Commands.print("No autonomous command configured");
+        return drivetrain.applyRequest(() ->
+            drive.withVelocityX(-0.3) // Drive forward with negative Y (forward)
+                .withVelocityY(0) // Drive left with negative X (left)
+                .withRotationalRate(0) // Drive counterclockwise with negative X (left)
+        );
     }
 }
