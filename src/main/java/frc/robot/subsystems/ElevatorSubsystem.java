@@ -152,8 +152,8 @@ public class ElevatorSubsystem extends SubsystemBase{
         }
         */
         
-        elevatorNeoLeft.set(-currentPIDVal);
-        elevatorNeoRight.set(currentPIDVal);
+        //elevatorNeoLeft.set(-currentPIDVal);
+        //elevatorNeoRight.set(currentPIDVal);
 
         //isManualRun = false;
 

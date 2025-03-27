@@ -123,7 +123,9 @@ public class RobotContainer {
             )
         );
 
-        driverController.x().onTrue(questServer.SetSetpoint(setpoint));
+
+        // AUTO SCORING !!!!PEENOR!!!!
+        driverController.x().onTrue(questServer.SetSetpoint(questServer.getClosestReefPose(true)));
 
         driverController.x().whileTrue(drivetrain.applyRequest(() ->
             drive.withVelocityX(questServer.getPidValues(0)*drivetrainSpeedMultiplier) 
@@ -131,14 +133,15 @@ public class RobotContainer {
                 .withRotationalRate(questServer.getPidValues(2) * MaxAngularRate) 
         ));
 
-        driverController.x().whileTrue(questServer.EnableAuto());
-        driverController.x().whileFalse(questServer.DisableAuto());
+        // driverController.x().whileTrue(questServer.EnableAuto());
+        // driverController.x().whileFalse(questServer.DisableAuto());
 
         
         driverController.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        driverController.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))
-        ));
+
+        // driverController.b().whileTrue(drivetrain.applyRequest(() ->
+        //     point.withModuleDirection(new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))
+        // ));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.

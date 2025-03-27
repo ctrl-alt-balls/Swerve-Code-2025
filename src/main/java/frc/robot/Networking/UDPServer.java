@@ -11,6 +11,7 @@ import java.util.Arrays;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.mathstuff.PoopyMath;
 import frc.robot.Constants.AprilTagConstants;
+import frc.robot.subsystems.SubsystemConstants.SubsystemConstants.ScoringPoses;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -381,6 +382,24 @@ public class UDPServer extends SubsystemBase{
                 System.out.println("fuck you");
             }
         );
+    }
+
+    public double[] getClosestReefPose(boolean redOrBlue){
+        double minDist = 1000000;
+        double currentDist = 0;
+        Double3 closestPose = new Double3(0,0,0);
+        if(redOrBlue){
+            for (Double3 scoringPose : ScoringPoses.redReefScoringPoses){
+                currentDist=PoopyMath.getDistance(new Double3(globalizedRecievedPose[0], globalizedRecievedPose[1], globalizedRecievedPose[2]),scoringPose);
+                if(currentDist<minDist){
+                    minDist=currentDist;
+                    closestPose=scoringPose;
+                }
+            }
+            return new double[]{closestPose.x,closestPose.y,closestPose.z};
+        }else{
+            return new double[]{69,69,69};
+        }
     }
 
 
